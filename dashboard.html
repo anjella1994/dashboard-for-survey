@@ -26,8 +26,8 @@
     --panel-pad-left: 18px;
     --panel-pad-right: 18px;
     --main-area-pad: 20px;
-    --criterion-col-width: clamp(220px, 24vw, 300px);
-    --legend-slot-width: 220px;
+    --criterion-col-width: clamp(236px, 26vw, 320px);
+    --visual-inner-adjust: 24px;
   }
 
   * { box-sizing: border-box; }
@@ -812,10 +812,10 @@
     min-height: 72px;
     border: 1.5px dashed var(--border);
     border-radius: var(--radius-sm);
-    padding: 12px;
+    padding: 9px 10px;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 5px;
     align-content: flex-start;
     transition: all .12s;
     background: var(--bg-soft);
@@ -1026,16 +1026,15 @@
   .hbar-chart.group-compare .hbar-value { color: var(--text-3); font-weight: 500; }
   .result-visual {
     display: grid;
-    grid-template-columns: minmax(0, calc(100% - var(--criterion-col-width) - 14px)) minmax(0, 1fr);
-    gap: 18px;
+    grid-template-columns: minmax(0, 1fr) calc(var(--criterion-col-width) - var(--visual-inner-adjust));
+    gap: 14px;
     align-items: start;
-  }
-  .result-visual.has-legend {
-    grid-template-columns: minmax(0, calc(100% - var(--criterion-col-width) - 14px)) minmax(0, 1fr);
+    margin-bottom: 18px;
   }
   .result-chart-col {
     min-width: 0;
     width: 100%;
+    padding-right: 12px;
   }
 
   .hbar-group-overlay {
@@ -1106,8 +1105,7 @@
   .legend-item.disabled { color: var(--text-4); }
   .legend-item.disabled .legend-swatch { opacity: 0.28; }
   .legend-panel {
-    border-left: 1px solid var(--border-2);
-    padding-left: 18px;
+    padding-left: 12px;
     min-width: 0;
   }
 
@@ -1170,9 +1168,6 @@
   }
   @media (max-width: 980px) {
     .result-visual {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .result-visual.has-legend {
       grid-template-columns: minmax(0, 1fr);
     }
     .legend-panel {
@@ -1889,6 +1884,14 @@ async function loadCodebookRows(fileRec) {
     return rows.map(r => (r || []).map(v => v == null ? '' : String(v)));
   }
   return null;
+}
+
+function cleanCell(v) {
+  return String(v == null ? '' : v).replace(/^\uFEFF/, '').trim();
+}
+
+function loadRowsFromStoredFile(fileRec) {
+  return loadCodebookRows(fileRec);
 }
 
 // 코드북을 category_1 > category_2 > question 구조로 변환하고 화면에 렌더링합니다.
@@ -3032,18 +3035,6 @@ function setupSavedModal() {
    - 데이터 테이블: 보기별 비율(%) 과 응답자 수(N)
    - 툴팁/범례는 스펙에 맞춰 구성
    ===================================================================== */
-
-// 보조 헬퍼: 기존 코드가 참조하지만 정의되지 않은 함수들을 최소 보완합니다.
-if (typeof cleanCell !== 'function') {
-  window.cleanCell = function cleanCell(v) {
-    return String(v == null ? '' : v).replace(/^\uFEFF/, '').trim();
-  };
-}
-if (typeof loadRowsFromStoredFile !== 'function') {
-  window.loadRowsFromStoredFile = function loadRowsFromStoredFile(fileRec) {
-    return loadCodebookRows(fileRec);
-  };
-}
 
 const GROUP_PALETTE = [
   '#5b7a9a', '#c67b7b', '#7ba87a', '#c6a77b',
