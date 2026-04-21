@@ -544,22 +544,27 @@
     border-top: none;
     border-radius: 0;
     padding: 12px var(--main-area-pad);
+    min-height: 56px;
+    height: 56px;
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     position: sticky;
     top: 0;
     z-index: 3;
     margin: 0 calc(var(--main-area-pad) * -1) 6px;
     box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    overflow: visible;
   }
   .filter-list {
     display: flex;
     align-items: center;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     min-width: 0;
+    flex: 1 1 auto;
+    overflow: visible;
   }
   .filter-label {
     font-size: 11px;
@@ -643,6 +648,23 @@
     border-color: var(--black);
     background: #fff;
     color: var(--black);
+  }
+  .filter-control.active .filter-control-btn {
+    border-color: #9a9a9a;
+    background: #fff;
+    color: var(--black);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.03);
+  }
+  .filter-control.active .filter-control-title {
+    color: var(--black);
+  }
+  .filter-control.active .filter-control-summary {
+    color: var(--text-2);
+    font-weight: 600;
+  }
+  .filter-control.active .filter-control-count {
+    background: var(--black);
+    color: #fff;
   }
   .filter-control-title {
     font-weight: 600;
@@ -747,6 +769,7 @@
   }
   .n-count {
     margin-left: auto;
+    flex: 0 0 auto;
     font-size: 11.5px;
     color: var(--text-3);
     padding-left: 10px;
@@ -1029,7 +1052,7 @@
     grid-template-columns: minmax(0, 1fr) calc(var(--criterion-col-width) - var(--visual-inner-adjust));
     gap: 14px;
     align-items: start;
-    margin-bottom: 18px;
+    margin-bottom: 24px;
   }
   .result-chart-col {
     min-width: 0;
@@ -1079,6 +1102,26 @@
     flex-direction: column;
     gap: 8px;
     padding: 8px 0 2px;
+  }
+  .legend-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+  }
+  .legend-action-btn {
+    font-size: 11px;
+    color: var(--text-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    padding: 4px 9px;
+    background: #fff;
+    transition: all .15s ease;
+  }
+  .legend-action-btn:hover {
+    color: var(--text);
+    border-color: var(--text-2);
+    background: var(--bg-soft);
   }
   .legend-item {
     display: inline-flex;
@@ -1890,10 +1933,6 @@ function cleanCell(v) {
   return String(v == null ? '' : v).replace(/^\uFEFF/, '').trim();
 }
 
-function loadRowsFromStoredFile(fileRec) {
-  return loadCodebookRows(fileRec);
-}
-
 // 코드북을 category_1 > category_2 > question 구조로 변환하고 화면에 렌더링합니다.
 function buildQuestionTree(rows) {
   if (!rows || rows.length < 2) return [];
@@ -2242,7 +2281,8 @@ const filterState = {
   defaultKeys: [],
   rows: [],
   headerMap: new Map(),
-  draggingKey: null
+  draggingKey: null,
+  openKey: null
 };
 
 function buildFilterCandidates(codebookRows, labelRows) {
@@ -2393,7 +2433,7 @@ function renderFilters() {
   getActiveFilterItems().forEach(item => {
     const selected = getSelectedValues(item.key);
     const wrap = document.createElement('div');
-    wrap.className = 'filter-control' + (item.fixed ? '' : ' draggable');
+    wrap.className = 'filter-control' + (selected.size > 0 ? ' active' : '') + (item.fixed ? '' : ' draggable');
     wrap.dataset.key = item.key;
     wrap.draggable = !item.fixed;
     wrap.innerHTML = `
@@ -2447,6 +2487,7 @@ function renderFilters() {
       });
       addWrap.classList.remove('open');
       wrap.classList.toggle('open');
+      filterState.openKey = wrap.classList.contains('open') ? item.key : null;
       requestAnimationFrame(() => positionPopupWithinMainArea(wrap, wrap.querySelector('.filter-menu')));
     });
 
@@ -2503,6 +2544,11 @@ function renderFilters() {
     });
 
     listEl.appendChild(wrap);
+
+    if (filterState.openKey === item.key) {
+      wrap.classList.add('open');
+      requestAnimationFrame(() => positionPopupWithinMainArea(wrap, menu));
+    }
   });
 
   const remaining = filterState.candidates.filter(item => !filterState.activeKeys.includes(item.key));
@@ -2531,6 +2577,7 @@ function renderFilters() {
     addBtn.dataset.bound = '1';
     addBtn.addEventListener('click', () => {
       document.querySelectorAll('.filter-control.open').forEach(el => el.classList.remove('open'));
+      filterState.openKey = null;
       addWrap.classList.toggle('open');
       requestAnimationFrame(() => positionPopupWithinMainArea(addWrap, addMenu));
     });
@@ -2541,6 +2588,7 @@ function renderFilters() {
     document.addEventListener('click', e => {
       if (!e.target.closest('.filter-control')) {
         document.querySelectorAll('.filter-control.open').forEach(el => el.classList.remove('open'));
+        filterState.openKey = null;
       }
       if (!e.target.closest('.filter-add')) {
         const add = document.getElementById('filter-add');
@@ -2619,8 +2667,8 @@ async function setupFilters() {
     return;
   }
 
-  const codebookRows = await loadRowsFromStoredFile(cur.files.codebook);
-  const labelRows = await loadRowsFromStoredFile(cur.files.label);
+  const codebookRows = await loadCodebookRows(cur.files.codebook);
+  const labelRows = await loadCodebookRows(cur.files.label);
   const { candidates, headerMap } = buildFilterCandidates(codebookRows || [], labelRows || []);
 
   filterState.candidates = candidates;
@@ -3226,6 +3274,22 @@ function renderTableOptionLabel(option, targetLabel) {
   return `${safeOption}<button type="button" class="other-response-open-btn" data-open-other="${escapeHtml(targetLabel)}">응답 보기</button>`;
 }
 
+function getDisplayGroupResults(groupResults, hidden) {
+  if (!Array.isArray(groupResults)) return [];
+  return groupResults.filter(group => {
+    const hasResponse = (group.results || []).some(r => (r.count || 0) > 0);
+    if (!hasResponse) return false;
+    if (hidden && hidden.has(group.value)) return false;
+    return true;
+  });
+}
+
+function getGroupColor(groupResults, groupValue) {
+  const baseGroups = getDisplayGroupResults(groupResults);
+  const idx = baseGroups.findIndex(group => group.value === groupValue);
+  return GROUP_PALETTE[(idx < 0 ? 0 : idx) % GROUP_PALETTE.length];
+}
+
 function buildBasicChartHtml(data) {
   const rows = data.totalResults;
   const rowHtml = rows.map(r => {
@@ -3253,6 +3317,7 @@ function buildBasicChartHtml(data) {
 
 function buildGroupCompareChartHtml(data, hidden) {
   const rows = data.totalResults;
+  const displayGroups = getDisplayGroupResults(data.groupResults, hidden);
   const rowHtml = rows.map(r => {
     const widthStr = `${Math.max(0, Math.min(100, r.pct))}%`;
     const tip = encodeURIComponent(JSON.stringify({
@@ -3274,10 +3339,8 @@ function buildGroupCompareChartHtml(data, hidden) {
     `;
   }).join('');
 
-  const pathsHtml = data.groupResults.map((g) => {
-    if (hidden.has(g.value)) return '';
-    const idx = data.groupResults.indexOf(g);
-    const color = GROUP_PALETTE[idx % GROUP_PALETTE.length];
+  const pathsHtml = displayGroups.map((g) => {
+    const color = getGroupColor(data.groupResults, g.value);
     const pcts = rows.map((r) => {
       const gr = g.results.find(x => x.option === r.option) || { pct: 0, count: 0 };
       return Math.max(0, Math.min(100, gr.pct)).toFixed(4);
@@ -3285,10 +3348,8 @@ function buildGroupCompareChartHtml(data, hidden) {
     return `<path class="group-path" d="" stroke="${color}" vector-effect="non-scaling-stroke" data-pcts="${pcts}" />`;
   }).join('');
 
-  const dotsHtml = data.groupResults.map((g) => {
-    if (hidden.has(g.value)) return '';
-    const idx = data.groupResults.indexOf(g);
-    const color = GROUP_PALETTE[idx % GROUP_PALETTE.length];
+  const dotsHtml = displayGroups.map((g) => {
+    const color = getGroupColor(data.groupResults, g.value);
     return rows.map((r, i) => {
       const gr = g.results.find(x => x.option === r.option) || { pct: 0, count: 0 };
       const left = Math.max(0, Math.min(100, gr.pct));
@@ -3321,8 +3382,10 @@ function buildGroupCompareChartHtml(data, hidden) {
 
 function buildLegendHtml(data, hidden) {
   if (!data.groupResults) return '';
-  const items = data.groupResults.map((g, i) => {
-    const color = GROUP_PALETTE[i % GROUP_PALETTE.length];
+  const displayGroups = getDisplayGroupResults(data.groupResults);
+  if (displayGroups.length === 0) return '';
+  const items = displayGroups.map((g) => {
+    const color = getGroupColor(data.groupResults, g.value);
     const isHidden = hidden.has(g.value);
     return `
       <label class="legend-item ${isHidden ? 'disabled' : ''}" data-group="${escapeHtml(g.value)}">
@@ -3335,6 +3398,10 @@ function buildLegendHtml(data, hidden) {
   return `
     <aside class="legend-panel">
       <div class="legend" data-target="${escapeHtml(data.targetLabel)}">${items}</div>
+      <div class="legend-actions" data-target="${escapeHtml(data.targetLabel)}">
+        <button type="button" class="legend-action-btn" data-legend-action="all-on">전체 선택</button>
+        <button type="button" class="legend-action-btn" data-legend-action="all-off">전체 해제</button>
+      </div>
     </aside>
   `;
 }
@@ -3372,18 +3439,21 @@ function buildDataTableHtml(data) {
     `;
   }
 
+  const hidden = resultState.hiddenGroupKeys.get(data.targetLabel) || new Set();
+  const displayGroups = getDisplayGroupResults(groupResults, hidden);
+
   const topRow1 = [
     `<th rowspan="2">응답 보기</th>`,
     `<th colspan="2" class="group-head">응답자 전체<br><span style="font-weight:500;color:var(--text-3);">N=${totalN.toLocaleString()}</span></th>`,
-    ...groupResults.map(g => `<th colspan="2" class="group-head">${escapeHtml(g.label)}<br><span style="font-weight:500;color:var(--text-3);">N=${g.n.toLocaleString()}</span></th>`)
+    ...displayGroups.map(g => `<th colspan="2" class="group-head">${escapeHtml(g.label)}<br><span style="font-weight:500;color:var(--text-3);">N=${g.n.toLocaleString()}</span></th>`)
   ].join('');
   const topRow2 = [
     `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>`,
-    ...groupResults.map(() => `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>`)
+    ...displayGroups.map(() => `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>`)
   ].join('');
 
   const bodyRows = totalResults.map(r => {
-    const groupCells = groupResults.map(g => {
+    const groupCells = displayGroups.map(g => {
       const gr = g.results.find(x => x.option === r.option) || { pct: 0, count: 0 };
       return `<td class="num group-col">${formatPercent(gr.pct)}</td><td class="num">${gr.count.toLocaleString()}</td>`;
     }).join('');
@@ -3466,8 +3536,6 @@ function buildSectionHtml(data, rows) {
   const fullText = codebookEntry.full
     ? `<div class="result-sub">Q. ${escapeHtml(codebookEntry.full)}</div>`
     : '';
-  const visualClass = groupResults ? 'result-visual has-legend' : 'result-visual';
-
   return `
     <section class="result-section" data-target="${escapeHtml(targetLabel)}">
       <div class="result-header">
@@ -3477,7 +3545,7 @@ function buildSectionHtml(data, rows) {
         </div>
         ${fullText}
       </div>
-      <div class="${visualClass}">
+      <div class="result-visual">
         <div class="result-chart-col">${chartHtml}</div>
         ${legendHtml}
       </div>
@@ -3618,6 +3686,26 @@ function attachResultEventListeners(container) {
         if (cb.checked) hidden.delete(item.dataset.group);
         else hidden.add(item.dataset.group);
         resultState.hiddenGroupKeys.set(targetLabel, hidden);
+        renderResults();
+      });
+    });
+  });
+  container.querySelectorAll('.legend-actions').forEach(actions => {
+    const targetLabel = actions.dataset.target;
+    actions.querySelectorAll('[data-legend-action]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const panel = btn.closest('.legend-panel');
+        const legend = panel ? panel.querySelector('.legend') : null;
+        const groupValues = legend
+          ? Array.from(legend.querySelectorAll('.legend-item')).map(item => item.dataset.group).filter(Boolean)
+          : [];
+        if (btn.dataset.legendAction === 'all-on') {
+          resultState.hiddenGroupKeys.set(targetLabel, new Set());
+        } else if (btn.dataset.legendAction === 'all-off') {
+          resultState.hiddenGroupKeys.set(targetLabel, new Set(groupValues));
+        }
         renderResults();
       });
     });
