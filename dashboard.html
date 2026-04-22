@@ -851,6 +851,7 @@
     background: var(--bg-soft);
   }
   .drop-area {
+    position: relative;
     min-height: 72px;
     border: 1.5px dashed var(--border);
     border-radius: var(--radius-sm);
@@ -873,9 +874,14 @@
     background: #eeeeee;
   }
   .drop-area .empty-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: var(--text-4);
     font-size: 12px;
-    margin: auto;
+    padding: 9px 10px;
     text-align: center;
   }
   .drop-area.has-chip .empty-hint { display: none; }
@@ -974,7 +980,7 @@
   .data-table td { color: var(--text-2); }
   .data-table tr:hover td { background: var(--bg-soft); }
 
-  /* ===== 분석 결과 렌더링 (객관식 단일) ===== */
+  /* ===== 분석 결과 렌더링 (객관식 단일/중복) ===== */
   .result-container {
     display: flex;
     flex-direction: column;
@@ -1012,6 +1018,7 @@
     font-size: 12px;
   }
   .result-sub { font-size: 13px; color: var(--text-2); line-height: 1.6; }
+  .result-note { font-size: 12px; color: var(--text-3); line-height: 1.5; }
   .result-unsupported {
     font-size: 12px;
     color: var(--text-3);
@@ -2263,7 +2270,7 @@ function setupSelectionAndDragDrop() {
         if (!data || !data.label) continue;
         if (zone.dataset.zone === 'criterion') {
           const entry = resultState.codebookByLabel.get(data.label);
-          if (!entry || entry.role !== 'raw' || entry.type !== '객관식 단일') continue;
+          if (!entry || entry.role !== 'raw' || !isSingleChoiceType(entry.type)) continue;
         }
         if (existingLabels.has(data.label)) continue;
         const current = zone.querySelectorAll('.chip').length;
@@ -3202,6 +3209,97 @@ function getFilteredLabelDataRows() {
   });
 }
 
+function isSingleChoiceType(type) {
+  return cleanCell(type).includes('객관식 단일');
+}
+
+function isMultiChoiceType(type) {
+  return cleanCell(type).includes('객관식 중복');
+}
+
+function supportsResultType(type) {
+  return isSingleChoiceType(type) || isMultiChoiceType(type);
+}
+
+function getCriterionEntry(criterionLabel) {
+  return resultState.codebookByLabel.get(criterionLabel) || (() => {
+    const candidate = getCandidateByKey(criterionLabel);
+    if (!candidate) return null;
+    return {
+      label: candidate.label,
+      type: '객관식 단일',
+      role: 'raw',
+      options: candidate.options || []
+    };
+  })();
+}
+
+function getExpandedMultiOptionItems(targetLabel, entry) {
+  if (!entry || !isMultiChoiceType(entry.type)) return [];
+
+  const items = [];
+  const usedLabels = new Set();
+  const headerMap = filterState.headerMap || new Map();
+
+  (entry.options || []).forEach(option => {
+    const expandedLabel = `${targetLabel}__${option}`;
+    if (!headerMap.has(expandedLabel)) return;
+    items.push({ option, label: expandedLabel });
+    usedLabels.add(expandedLabel);
+  });
+
+  resultState.codebookByLabel.forEach((candidate, label) => {
+    if (!candidate || cleanCell(candidate.role).toLowerCase() !== 'expanded') return;
+    if (!isMultiChoiceType(candidate.type)) return;
+    if (!label.startsWith(`${targetLabel}__`)) return;
+    if (!headerMap.has(label) || usedLabels.has(label)) return;
+
+    const option = cleanCell(label.slice(targetLabel.length + 2));
+    if (!option || option.includes('기타_텍스트') || option.includes('기타 텍스트')) return;
+    items.push({ option, label });
+    usedLabels.add(label);
+  });
+
+  return items;
+}
+
+function isMarkedMultiSelected(value) {
+  const normalized = cleanCell(value).toLowerCase();
+  return normalized === '선택'
+    || normalized === '1'
+    || normalized === 'y'
+    || normalized === 'yes'
+    || normalized === 'true'
+    || normalized === 'selected';
+}
+
+function getMultiSelectionsFromRow(row, rawIdx, expandedItems) {
+  const selected = [];
+  const seen = new Set();
+
+  (expandedItems || []).forEach(item => {
+    const idx = filterState.headerMap.get(item.label);
+    if (idx === undefined) return;
+    if (!isMarkedMultiSelected((row || [])[idx])) return;
+    if (seen.has(item.option)) return;
+    seen.add(item.option);
+    selected.push(item.option);
+  });
+
+  if (rawIdx === undefined) return selected;
+
+  const rawValue = cleanCell((row || [])[rawIdx]);
+  if (!rawValue) return selected;
+
+  rawValue.split('|').map(cleanCell).filter(Boolean).forEach(option => {
+    if (seen.has(option)) return;
+    seen.add(option);
+    selected.push(option);
+  });
+
+  return selected;
+}
+
 function aggregateSingle(targetLabel, criterionLabel, rows) {
   const entry = resultState.codebookByLabel.get(targetLabel);
   if (!entry) return null;
@@ -3240,16 +3338,7 @@ function aggregateSingle(targetLabel, criterionLabel, rows) {
 
   let groupResults = null;
   if (criterionLabel) {
-    const critEntry = resultState.codebookByLabel.get(criterionLabel) || (() => {
-      const candidate = getCandidateByKey(criterionLabel);
-      if (!candidate) return null;
-      return {
-        label: candidate.label,
-        type: '객관식 단일',
-        role: 'raw',
-        options: candidate.options || []
-      };
-    })();
+    const critEntry = getCriterionEntry(criterionLabel);
     const cIdx = filterState.headerMap.get(criterionLabel);
     if (critEntry && cIdx !== undefined) {
       const groupOrder = [...critEntry.options];
@@ -3302,8 +3391,121 @@ function aggregateSingle(targetLabel, criterionLabel, rows) {
     optionOrder: visibleOptionOrder,
     totalResults: visibleTotalResults,
     criterionLabel: groupResults ? criterionLabel : null,
-    groupResults
+    groupResults,
+    isMulti: false
   };
+}
+
+function aggregateMulti(targetLabel, criterionLabel, rows) {
+  const entry = resultState.codebookByLabel.get(targetLabel);
+  if (!entry) return null;
+
+  const tIdx = filterState.headerMap ? filterState.headerMap.get(targetLabel) : undefined;
+  const expandedItems = getExpandedMultiOptionItems(targetLabel, entry);
+  if (tIdx === undefined && expandedItems.length === 0) return null;
+
+  const optionOrder = [...entry.options];
+  const optionSet = new Set(optionOrder);
+  const totalCount = {};
+  optionOrder.forEach(o => totalCount[o] = 0);
+  let totalN = 0;
+
+  rows.forEach(row => {
+    const selectedOptions = getMultiSelectionsFromRow(row, tIdx, expandedItems);
+    if (selectedOptions.length === 0) return;
+
+    selectedOptions.forEach(option => {
+      if (!optionSet.has(option)) {
+        optionSet.add(option);
+        optionOrder.push(option);
+        totalCount[option] = 0;
+      }
+      totalCount[option] = (totalCount[option] || 0) + 1;
+    });
+    totalN += 1;
+  });
+
+  const totalResults = optionOrder.map(option => ({
+    option,
+    count: totalCount[option] || 0,
+    pct: totalN > 0 ? ((totalCount[option] || 0) / totalN) * 100 : 0
+  }));
+
+  const visibleOptionOrder = optionOrder.filter(option => (totalCount[option] || 0) > 0);
+  const visibleOptionSet = new Set(visibleOptionOrder);
+  const visibleTotalResults = totalResults.filter(result => visibleOptionSet.has(result.option));
+
+  let groupResults = null;
+  if (criterionLabel) {
+    const critEntry = getCriterionEntry(criterionLabel);
+    const cIdx = filterState.headerMap.get(criterionLabel);
+    if (critEntry && cIdx !== undefined) {
+      const groupOrder = [...critEntry.options];
+      const groupSet = new Set(groupOrder);
+      const byGroup = new Map();
+      const createGroupState = () => ({
+        n: 0,
+        count: Object.fromEntries(optionOrder.map(option => [option, 0]))
+      });
+
+      groupOrder.forEach(groupValue => {
+        byGroup.set(groupValue, createGroupState());
+      });
+
+      rows.forEach(row => {
+        const groupValue = cleanCell((row || [])[cIdx]);
+        const selectedOptions = getMultiSelectionsFromRow(row, tIdx, expandedItems);
+        if (groupValue === '' || selectedOptions.length === 0) return;
+
+        if (!groupSet.has(groupValue)) {
+          groupSet.add(groupValue);
+          groupOrder.push(groupValue);
+          byGroup.set(groupValue, createGroupState());
+        }
+
+        const group = byGroup.get(groupValue);
+        group.n += 1;
+
+        selectedOptions.forEach(option => {
+          if (group.count[option] === undefined) group.count[option] = 0;
+          group.count[option] += 1;
+        });
+      });
+
+      groupResults = groupOrder.map(groupValue => {
+        const group = byGroup.get(groupValue);
+        return {
+          value: groupValue,
+          label: `${critEntry.label}: ${groupValue}`,
+          n: group.n,
+          results: visibleOptionOrder.map(option => ({
+            option,
+            count: group.count[option] || 0,
+            pct: group.n > 0 ? ((group.count[option] || 0) / group.n) * 100 : 0
+          }))
+        };
+      });
+    }
+  }
+
+  return {
+    targetLabel,
+    codebookEntry: entry,
+    totalN,
+    optionOrder: visibleOptionOrder,
+    totalResults: visibleTotalResults,
+    criterionLabel: groupResults ? criterionLabel : null,
+    groupResults,
+    isMulti: true
+  };
+}
+
+function aggregateResultQuestion(targetLabel, criterionLabel, rows) {
+  const entry = resultState.codebookByLabel.get(targetLabel);
+  if (!entry) return null;
+  if (isSingleChoiceType(entry.type)) return aggregateSingle(targetLabel, criterionLabel, rows);
+  if (isMultiChoiceType(entry.type)) return aggregateMulti(targetLabel, criterionLabel, rows);
+  return null;
 }
 
 function formatPercent(value) {
@@ -3458,6 +3660,8 @@ function buildDataTableHtml(data) {
   const { totalResults, groupResults, totalN } = data;
   if (!groupResults) {
     const sumPct = totalResults.reduce((s, r) => s + r.pct, 0);
+    const sumCount = totalResults.reduce((s, r) => s + (r.count || 0), 0);
+    const totalLabel = data.isMulti ? '복수응답 합계' : '합계';
     return `
       <div class="result-table-wrap">
         <table class="result-table">
@@ -3477,9 +3681,9 @@ function buildDataTableHtml(data) {
               </tr>
             `).join('')}
             <tr class="total-row">
-              <td>합계</td>
+              <td>${totalLabel}</td>
               <td class="num">${formatPercent(sumPct)}</td>
-              <td class="num">${totalN.toLocaleString()}</td>
+              <td class="num">${(data.isMulti ? sumCount : totalN).toLocaleString()}</td>
             </tr>
           </tbody>
         </table>
@@ -3584,6 +3788,9 @@ function buildSectionHtml(data, rows) {
   const fullText = codebookEntry.full
     ? `<div class="result-sub">Q. ${escapeHtml(codebookEntry.full)}</div>`
     : '';
+  const noteText = data.isMulti
+    ? '<div class="result-note">복수응답 문항으로, 비율 합계는 100%를 초과할 수 있습니다.</div>'
+    : '';
   return `
     <section class="result-section" data-target="${escapeHtml(targetLabel)}">
       <div class="result-header">
@@ -3592,6 +3799,7 @@ function buildSectionHtml(data, rows) {
           <span class="result-n">N=${totalN.toLocaleString()}</span>
         </div>
         ${fullText}
+        ${noteText}
       </div>
       <div class="result-visual">
         <div class="result-chart-col">${chartHtml}</div>
@@ -3614,7 +3822,7 @@ function buildUnsupportedSection(label, entry) {
         ${fullText}
       </div>
       <div class="result-unsupported">
-        이 문항 유형(<strong>${escapeHtml(typeText)}</strong>)의 시각화는 아직 준비 중이에요. 현재는 <strong>객관식 단일</strong> 문항만 지원합니다.
+        이 문항 유형(<strong>${escapeHtml(typeText)}</strong>)의 시각화는 아직 준비 중이에요. 현재는 <strong>객관식 단일</strong>과 <strong>객관식 중복</strong> 문항을 지원합니다.
       </div>
     </section>
   `;
@@ -3657,8 +3865,8 @@ async function renderResults() {
   const sections = targetLabels.map(label => {
     const entry = resultState.codebookByLabel.get(label);
     if (!entry) return buildUnsupportedSection(label, null);
-    if (entry.type !== '객관식 단일') return buildUnsupportedSection(label, entry);
-    const data = aggregateSingle(label, criterionLabel, filteredRows);
+    if (!supportsResultType(entry.type)) return buildUnsupportedSection(label, entry);
+    const data = aggregateResultQuestion(label, criterionLabel, filteredRows);
     if (!data) return buildUnsupportedSection(label, entry);
     return buildSectionHtml(data, filteredRows);
   }).join('');

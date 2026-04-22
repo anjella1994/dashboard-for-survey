@@ -190,7 +190,7 @@
     min-height: 192px;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     transition: border-color .15s, background .15s;
   }
@@ -203,10 +203,13 @@
 
   .dz-default {
     display: flex;
+    flex: 1;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 24px;
     width: 100%;
+    text-align: center;
   }
   .dz-hint {
     font-size: 12.5px;
@@ -240,9 +243,13 @@
   }
   .dz-done-content {
     display: none;
+    flex: 1;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 8px;
+    width: 100%;
+    text-align: center;
   }
   .drop-zone.done .dz-default { display: none; }
   .drop-zone.done .dz-done-content { display: flex; }
