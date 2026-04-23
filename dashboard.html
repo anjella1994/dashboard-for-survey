@@ -1200,8 +1200,53 @@
     padding-left: 12px;
     min-width: 0;
   }
+  .result-view-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: #fff;
+    width: fit-content;
+  }
+  .result-view-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-3);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 7px 12px;
+    border-radius: var(--radius-pill);
+    transition: background .15s ease, color .15s ease;
+  }
+  .result-view-btn.active {
+    background: var(--black);
+    color: #fff;
+  }
+  .scale-view-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+  .scale-view-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .scale-view-option input {
+    margin: 0;
+  }
 
   .scale-chart {
+    --scale-track-height: 42px;
+    --scale-track-center: calc(var(--scale-track-height) / 2);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -1214,7 +1259,14 @@
   .scale-mean-row {
     position: relative;
     width: 100%;
-    height: 24px;
+    height: 68px;
+  }
+  .scale-mean-row.centered {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    pointer-events: none;
+    z-index: 2;
   }
   .scale-bar {
     width: 100%;
@@ -1223,10 +1275,13 @@
     position: relative;
     display: flex;
     width: 100%;
-    height: 42px;
+    height: var(--scale-track-height);
     overflow: hidden;
     border-radius: 8px;
     background: #f3f3f3;
+  }
+  .scale-track.is-muted {
+    opacity: 0.18;
   }
   .scale-segment {
     position: relative;
@@ -1235,6 +1290,34 @@
     align-items: center;
     justify-content: center;
     min-width: 0;
+  }
+  .scale-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 0 2px;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .scale-summary-item {
+    line-height: 1.3;
+  }
+  .scale-summary-item .label {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-3);
+  }
+  .scale-summary-item .value {
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-2);
+  }
+  .scale-summary-item.is-positive {
+    text-align: right;
   }
   .scale-segment-label {
     font-size: 11px;
@@ -1275,25 +1358,69 @@
     border-top: 8px solid var(--text);
   }
   .scale-axis {
-    height: 8px;
+    height: 14px;
     position: relative;
     width: 100%;
+  }
+  .scale-axis::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 5px;
+    height: 2px;
+    background: #b7b7b7;
+  }
+  .scale-axis.axis-centered {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    overflow: visible;
+    z-index: 1;
+  }
+  .scale-axis.axis-centered::before {
+    top: var(--scale-track-center);
+    transform: translateY(-50%);
   }
   .scale-axis-point {
     position: absolute;
     top: 0;
     transform: translateX(-50%);
     width: 1px;
-    height: 8px;
+    height: 14px;
     display: block;
   }
   .scale-axis-tick {
     display: block;
-    width: 1px;
-    height: 8px;
-    background: #bdbdbd;
+    width: 2px;
+    height: 14px;
+    background: #9f9f9f;
+  }
+  .scale-axis.axis-centered .scale-axis-point {
+    top: calc(var(--scale-track-center) - 7px);
+    height: 14px;
+  }
+  .scale-axis-label {
+    position: absolute;
+    top: calc(var(--scale-track-center) + 11px);
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap;
+  }
+  .scale-mean-label {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    white-space: nowrap;
   }
   .scale-group-chart {
+    --scale-track-height: 42px;
+    --scale-track-center: calc(var(--scale-track-height) / 2);
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -1304,7 +1431,42 @@
     gap: 12px;
     align-items: center;
   }
+  .scale-mean-only {
+    position: relative;
+    min-height: 68px;
+  }
+  .scale-mean-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .scale-mean-dot {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--black);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  }
+  .scale-mean.centered {
+    top: var(--scale-track-center);
+    transform: translate(-50%, -50%);
+    gap: 0;
+    pointer-events: auto;
+  }
   .scale-group-label {
+    min-height: var(--scale-track-height);
+    display: flex;
+    align-items: center;
     font-size: 12px;
     color: var(--text-2);
     line-height: 1.4;
@@ -1313,7 +1475,33 @@
     display: block;
     color: var(--text);
     font-size: 12px;
-    margin-bottom: 2px;
+  }
+  .scale-group-chart-cell {
+    min-width: 0;
+  }
+  .scale-group-controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin-top: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-2);
+    border-radius: var(--radius-sm);
+    background: #fafafa;
+  }
+  .scale-group-controls-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin-right: 2px;
+  }
+  .scale-group-controls-bar .legend-item {
+    margin: 0;
+    min-width: 0;
+  }
+  .scale-group-controls-bar .legend-item span:last-child {
+    word-break: keep-all;
   }
   .scale-score-legend {
     display: flex;
@@ -1322,7 +1510,7 @@
   }
   .scale-score-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     font-size: 12px;
     color: var(--text-2);
@@ -1332,6 +1520,25 @@
     height: 12px;
     border-radius: 2px;
     flex: 0 0 auto;
+    margin-top: 2px;
+  }
+  .scale-score-copy {
+    display: block;
+    min-width: 0;
+  }
+  .scale-score-key {
+    font-weight: 500;
+    color: var(--text-2);
+  }
+  .scale-score-text {
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.35;
+    word-break: keep-all;
+  }
+  .legend-panel-divider {
+    height: 1px;
+    background: var(--border-2);
   }
 
   .result-table-wrap {
@@ -2014,7 +2221,7 @@
       </button>
     </div>
     <div class="modal-body">
-      <div class="update-note">업로드된 CSV/XLSX 파일을 파일별로 교체할 수 있어요. 문항 코드북을 바꾸면 좌측 문항 리스트가 새로 불러와지고, 분석 대상·기준에 올려둔 칩 중 더 이상 존재하지 않는 문항은 자동으로 제거됩니다.</div>
+      <div class="update-note">업로드된 CSV/XLSX 파일을 파일별로 교체할 수 있어요. 문항 코드북을 바꾸면 좌측 문항 리스트가 새로 불러와지고, 보고 싶은 문항·그룹별 비교에 올려둔 칩 중 더 이상 존재하지 않는 문항은 자동으로 제거됩니다.</div>
       <div id="data-update-list"></div>
     </div>
   </div>
@@ -3549,15 +3756,43 @@ function rankColor(idx) {
   return RANK_PALETTE[RANK_PALETTE.length - 1];
 }
 
+const SCALE_DIVERGING_PALETTE = [
+  '#8e4c4c', '#bb7474', '#d8a5a5', '#dddddd', '#a9bfd4', '#7598b8', '#4c7398'
+];
+function getScaleColor(score, maxScore) {
+  if (!Number.isFinite(score) || !Number.isFinite(maxScore) || maxScore <= 1) return '#d9d9d9';
+  const idx = Math.round(((score - 1) * (SCALE_DIVERGING_PALETTE.length - 1)) / (maxScore - 1));
+  return SCALE_DIVERGING_PALETTE[Math.max(0, Math.min(SCALE_DIVERGING_PALETTE.length - 1, idx))];
+}
+function isScaleDarkLabel(score, maxScore) {
+  const mid = (maxScore + 1) / 2;
+  return Math.abs(score - mid) < 0.6;
+}
+
 const resultState = {
   codebookByLabel: new Map(),
   codebookRowsByLabel: new Map(),
   hiddenGroupKeys: new Map(),
   hiddenRankKeys: new Map(),
+  scaleViewModes: new Map(),
+  scaleMidpointHidden: new Map(),
   otherResponseTexts: new Map(),
   tooltipEl: null,
   initialized: false
 };
+
+function parseValueCodeMap(text) {
+  const map = new Map();
+  String(text || '').split('|').forEach(part => {
+    const [rawKey, ...rest] = part.split('=');
+    if (!rawKey || rest.length === 0) return;
+    const key = cleanCell(rawKey);
+    const value = cleanCell(rest.join('='));
+    if (!key) return;
+    map.set(key, value);
+  });
+  return map;
+}
 
 function buildCodebookIndex(codebookRows) {
   const map = new Map();
@@ -3575,6 +3810,7 @@ function buildCodebookIndex(codebookRows) {
   const iOptions = col('response_options');
   const iOther = col('other_input_expected');
   const iValueCount = col('value_count');
+  const iValueCodeMap = col('value_code_map');
 
   for (let r = 1; r < codebookRows.length; r++) {
     const row = codebookRows[r] || [];
@@ -3587,6 +3823,7 @@ function buildCodebookIndex(codebookRows) {
       .split('|').map(cleanCell).filter(Boolean);
     const vcRaw = iValueCount >= 0 ? cleanCell(row[iValueCount]) : '';
     const valueCount = vcRaw ? Number(vcRaw) : null;
+    const valueCodeMap = iValueCodeMap >= 0 ? parseValueCodeMap(row[iValueCodeMap]) : new Map();
     map.set(label, {
       label,
       full: cleanCell(row[iFull]),
@@ -3594,7 +3831,8 @@ function buildCodebookIndex(codebookRows) {
       role: cleanCell(row[iRole]),
       options: opts,
       otherInput: cleanCell(row[iOther]).toUpperCase() === 'Y',
-      valueCount: Number.isFinite(valueCount) ? valueCount : null
+      valueCount: Number.isFinite(valueCount) ? valueCount : null,
+      valueCodeMap
     });
   }
   resultState.codebookRowsByLabel = rowsByLabel;
@@ -3608,7 +3846,7 @@ function getTargetChipLabels() {
 }
 function getCriterionChipLabel() {
   const chip = document.querySelector('#drop-criterion .chip');
-  return chip ? chip.dataset.label : null;
+  return chip ? (chip.dataset.key || chip.dataset.label) : null;
 }
 
 function clearDropZone(zoneId) {
@@ -3643,8 +3881,19 @@ function isMultiChoiceType(type) {
   return cleanCell(type).includes('객관식 중복');
 }
 
+function isRankChoiceType(type) {
+  return cleanCell(type).includes('객관식 순위');
+}
+
+function isScaleChoiceType(type) {
+  return cleanCell(type).includes('객관식 척도');
+}
+
 function supportsResultType(type) {
-  return isSingleChoiceType(type) || isMultiChoiceType(type);
+  return isSingleChoiceType(type)
+    || isMultiChoiceType(type)
+    || isRankChoiceType(type)
+    || isScaleChoiceType(type);
 }
 
 function getCriterionEntry(criterionLabel) {
@@ -3934,6 +4183,7 @@ function aggregateMulti(targetLabel, criterionLabel, rows) {
     totalN,
     optionOrder: visibleOptionOrder,
     totalResults: visibleTotalResults,
+    visualType: 'choice',
     criterionLabel: groupResults ? criterionLabel : null,
     groupResults,
     isMulti: true
@@ -3945,7 +4195,142 @@ function aggregateResultQuestion(targetLabel, criterionLabel, rows) {
   if (!entry) return null;
   if (isSingleChoiceType(entry.type)) return aggregateSingle(targetLabel, criterionLabel, rows);
   if (isMultiChoiceType(entry.type)) return aggregateMulti(targetLabel, criterionLabel, rows);
+  if (isRankChoiceType(entry.type)) return aggregateRank(targetLabel, criterionLabel, rows);
+  if (isScaleChoiceType(entry.type)) return aggregateScale(targetLabel, criterionLabel, rows);
   return null;
+}
+
+function getScaleScoreRange(entry) {
+  const maxScore = Number(entry && entry.valueCount);
+  const safeMax = Number.isFinite(maxScore) && maxScore >= 2 ? Math.round(maxScore) : 5;
+  return Array.from({ length: safeMax }, (_, i) => i + 1);
+}
+
+function getScaleScoreLabel(entry, score) {
+  const mapped = cleanCell(entry && entry.valueCodeMap ? entry.valueCodeMap.get(String(score)) : '');
+  return mapped || `${score}점`;
+}
+
+function getScalePolaritySummary(scoreResults) {
+  const mid = (Array.isArray(scoreResults) ? scoreResults.length : 0) > 0
+    ? ((scoreResults.length + 1) / 2)
+    : 0;
+  return (scoreResults || []).reduce((acc, result) => {
+    const pctValue = result.pct || 0;
+    if (result.score < mid) {
+      acc.negativePct += pctValue;
+      acc.negativeCount += result.count || 0;
+    } else if (result.score > mid) {
+      acc.positivePct += pctValue;
+      acc.positiveCount += result.count || 0;
+    } else {
+      acc.neutralPct += pctValue;
+      acc.neutralCount += result.count || 0;
+    }
+    return acc;
+  }, {
+    negativePct: 0,
+    negativeCount: 0,
+    positivePct: 0,
+    positiveCount: 0,
+    neutralPct: 0,
+    neutralCount: 0
+  });
+}
+
+function aggregateScale(targetLabel, criterionLabel, rows) {
+  const entry = resultState.codebookByLabel.get(targetLabel);
+  if (!entry) return null;
+  const tIdx = filterState.headerMap ? filterState.headerMap.get(targetLabel) : undefined;
+  if (tIdx === undefined) return null;
+
+  const scoreRange = getScaleScoreRange(entry);
+  const scoreCounts = Object.fromEntries(scoreRange.map(score => [score, 0]));
+  let totalN = 0;
+  let totalSum = 0;
+
+  rows.forEach(row => {
+    const raw = cleanCell((row || [])[tIdx]);
+    if (!raw) return;
+    const score = Number(raw);
+    if (!Number.isFinite(score)) return;
+    if (!Object.prototype.hasOwnProperty.call(scoreCounts, score)) return;
+    scoreCounts[score] += 1;
+    totalN += 1;
+    totalSum += score;
+  });
+
+  const scoreResults = scoreRange.map(score => ({
+    score,
+    label: getScaleScoreLabel(entry, score),
+    count: scoreCounts[score] || 0,
+    pct: totalN > 0 ? ((scoreCounts[score] || 0) / totalN) * 100 : 0
+  }));
+  const mean = totalN > 0 ? totalSum / totalN : 0;
+
+  let groupResults = null;
+  if (criterionLabel) {
+    const critEntry = getCriterionEntry(criterionLabel);
+    const cIdx = filterState.headerMap.get(criterionLabel);
+    if (critEntry && cIdx !== undefined) {
+      const groupOrder = [...critEntry.options];
+      const groupSet = new Set(groupOrder);
+      const byGroup = new Map();
+      const createBucket = () => ({
+        n: 0,
+        sum: 0,
+        counts: Object.fromEntries(scoreRange.map(score => [score, 0]))
+      });
+      groupOrder.forEach(groupValue => byGroup.set(groupValue, createBucket()));
+
+      rows.forEach(row => {
+        const groupValue = cleanCell((row || [])[cIdx]);
+        const raw = cleanCell((row || [])[tIdx]);
+        if (!groupValue || !raw) return;
+        const score = Number(raw);
+        if (!Number.isFinite(score)) return;
+        if (!Object.prototype.hasOwnProperty.call(scoreCounts, score)) return;
+
+        if (!groupSet.has(groupValue)) {
+          groupSet.add(groupValue);
+          groupOrder.push(groupValue);
+          byGroup.set(groupValue, createBucket());
+        }
+        const bucket = byGroup.get(groupValue);
+        bucket.n += 1;
+        bucket.sum += score;
+        bucket.counts[score] = (bucket.counts[score] || 0) + 1;
+      });
+
+      groupResults = groupOrder.map(groupValue => {
+        const bucket = byGroup.get(groupValue);
+        return {
+          value: groupValue,
+          label: `${critEntry.label}: ${groupValue}`,
+          n: bucket.n,
+          mean: bucket.n > 0 ? bucket.sum / bucket.n : 0,
+          scoreResults: scoreRange.map(score => ({
+            score,
+            label: getScaleScoreLabel(entry, score),
+            count: bucket.counts[score] || 0,
+            pct: bucket.n > 0 ? ((bucket.counts[score] || 0) / bucket.n) * 100 : 0
+          }))
+        };
+      });
+    }
+  }
+
+  return {
+    targetLabel,
+    codebookEntry: entry,
+    totalN,
+    mean,
+    scoreRange,
+    scoreResults,
+    visualType: 'scale',
+    criterionLabel: groupResults ? criterionLabel : null,
+    groupResults
+  };
 }
 
 function isSelectedBinaryValue(value) {
@@ -4330,7 +4715,336 @@ function buildChoiceDataTableHtml(data) {
   return wrapResultTable(tableHtml);
 }
 
-function buildDataTableHtml(data) {
+function getScaleViewMode(targetLabel) {
+  return resultState.scaleViewModes.get(targetLabel) || 'distribution';
+}
+
+function canHideScaleMidpoint(data) {
+  return !!(data && Array.isArray(data.scoreRange) && data.scoreRange.length >= 3 && (data.scoreRange.length % 2 === 1));
+}
+
+function isScaleMidpointHidden(targetLabel) {
+  return !!resultState.scaleMidpointHidden.get(targetLabel);
+}
+
+function buildScaleToggleHtml(targetLabel, activeMode, options = {}) {
+  const { showMidpointOption = false, hideMidpoint = false } = options;
+  const buttons = [
+    { mode: 'distribution', label: '분포 보기' },
+    { mode: 'mean', label: '평균 보기' }
+  ].map(item => `
+    <button type="button"
+            class="result-view-btn ${activeMode === item.mode ? 'active' : ''}"
+            data-scale-mode="${item.mode}"
+            data-target="${escapeHtml(targetLabel)}">
+      ${escapeHtml(item.label)}
+    </button>
+  `).join('');
+  const midpointOption = showMidpointOption ? `
+    <label class="scale-view-option">
+      <input type="checkbox" data-scale-hide-midpoint="true" data-target="${escapeHtml(targetLabel)}" ${hideMidpoint ? 'checked' : ''}>
+      <span>중간값 제외 보기</span>
+    </label>
+  ` : '';
+  return `
+    <div class="scale-view-controls">
+      <div class="result-view-toggle">${buttons}</div>
+      ${midpointOption}
+    </div>
+  `;
+}
+
+function buildScaleAxisHtml(maxScore, options = {}) {
+  const { centered = false, showLabels = false } = options;
+  return `
+    <div class="scale-axis ${centered ? 'axis-centered' : ''}">
+      ${Array.from({ length: maxScore }, (_, i) => {
+        const score = i + 1;
+        const left = maxScore === 1 ? 50 : (i / (maxScore - 1)) * 100;
+        return `
+          <span class="scale-axis-point" style="left:${left}%;">
+            <span class="scale-axis-tick"></span>
+          </span>
+          ${showLabels ? `<span class="scale-axis-label" style="left:${left}%;">${score}</span>` : ''}
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function buildScaleMeanHtml(mean, maxScore, tipData, options = {}) {
+  const { centered = false } = options;
+  if (!Number.isFinite(mean) || mean <= 0) return '<div class="scale-mean-row"></div>';
+  const left = maxScore <= 1 ? 50 : ((mean - 1) / (maxScore - 1)) * 100;
+  return `
+    <div class="scale-mean-row ${centered ? 'centered' : ''}">
+      <div class="scale-mean ${centered ? 'centered' : ''}" style="left:${Math.max(0, Math.min(100, left))}%;" data-tip="${encodeURIComponent(JSON.stringify(tipData))}">
+        <div class="scale-mean-label">평균</div>
+        <div class="scale-mean-dot">${mean.toFixed(2)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function getScaleDisplayResults(scoreResults, options = {}) {
+  const { hideMidpoint = false } = options;
+  const source = Array.isArray(scoreResults) ? scoreResults : [];
+  if (!hideMidpoint || source.length === 0 || (source.length % 2) !== 1) {
+    return source.map(result => ({
+      ...result,
+      displayPct: result.pct || 0
+    }));
+  }
+  const midpoint = (source.length + 1) / 2;
+  const filtered = source.filter(result => result.score !== midpoint);
+  const visibleTotalPct = filtered.reduce((sum, result) => sum + (result.pct || 0), 0);
+  return filtered.map(result => ({
+    ...result,
+    displayPct: visibleTotalPct > 0 ? ((result.pct || 0) / visibleTotalPct) * 100 : 0
+  }));
+}
+
+function buildScaleTrackHtml(scoreResults, maxScore, options = {}) {
+  const { muted = false, showLabels = false, interactive = true, hideMidpoint = false } = options;
+  const displayResults = getScaleDisplayResults(scoreResults, { hideMidpoint });
+  const segments = displayResults.map(result => {
+    const width = Math.max(0, Math.min(100, result.displayPct || 0));
+    const tip = encodeURIComponent(JSON.stringify({
+      kind: 'scale-segment',
+      score: result.score,
+      scoreLabel: result.label,
+      pct: result.pct,
+      count: result.count
+    }));
+    return `
+      <div class="scale-segment"
+           style="width:${width}%; background:${getScaleColor(result.score, maxScore)};"
+           ${interactive ? `data-tip="${tip}"` : ''}>
+        ${showLabels && width >= 8 ? `<span class="scale-segment-label ${isScaleDarkLabel(result.score, maxScore) ? 'is-dark' : ''}">${result.score}</span>` : ''}
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="scale-bar ${muted ? 'is-muted' : ''}">
+      <div class="scale-track ${muted ? 'is-muted' : ''}">${segments}</div>
+    </div>
+  `;
+}
+
+function buildScaleDistributionSummaryHtml(scoreResults, options = {}) {
+  const summary = getScalePolaritySummary(scoreResults);
+  return `
+    <div class="scale-summary">
+      <div class="scale-summary-item"><span class="label">부정응답 합계</span><span class="value">${formatPercent(summary.negativePct)}</span></div>
+      <div class="scale-summary-item is-positive"><span class="label">긍정응답 합계</span><span class="value">${formatPercent(summary.positivePct)}</span></div>
+    </div>
+  `;
+}
+
+function buildScaleDistributionBarHtml(scoreResults, maxScore, options = {}) {
+  const { hideMidpoint = false } = options;
+  return `
+    <div class="scale-bar-wrap">
+      ${buildScaleTrackHtml(scoreResults, maxScore, { hideMidpoint })}
+      ${buildScaleDistributionSummaryHtml(scoreResults, { hideMidpoint })}
+    </div>
+  `;
+}
+
+function buildScaleMeanOnlyHtml(mean, maxScore, meanTipData, scoreResults, options = {}) {
+  const { hideMidpoint = false } = options;
+  return `
+    <div class="scale-mean-only">
+      <div class="scale-mean-background">
+        ${buildScaleTrackHtml(scoreResults, maxScore, { muted: true, interactive: false, hideMidpoint })}
+      </div>
+      ${buildScaleAxisHtml(maxScore, { centered: true, showLabels: true })}
+      ${buildScaleMeanHtml(mean, maxScore, meanTipData, { centered: true })}
+    </div>
+  `;
+}
+
+function buildScaleLegendItemsHtml(data) {
+  const maxScore = data.scoreRange.length;
+  const items = data.scoreResults.map(result => `
+    <div class="scale-score-item">
+      <span class="scale-score-swatch" style="background:${getScaleColor(result.score, maxScore)}"></span>
+      <div class="scale-score-copy">
+        <span class="scale-score-key">${result.score}점</span>${result.label !== `${result.score}점` ? ` - <span class="scale-score-text">${escapeHtml(result.label)}</span>` : ''}
+      </div>
+    </div>
+  `).join('');
+  return `<div class="scale-score-legend">${items}</div>`;
+}
+
+function buildScaleLegendHtml(data) {
+  return `
+    <aside class="legend-panel">
+      ${buildScaleLegendItemsHtml(data)}
+    </aside>
+  `;
+}
+
+function buildScaleGroupLegendHtml(data) {
+  return buildScaleLegendHtml(data);
+}
+
+function buildScaleGroupControlsHtml(data, hiddenGroups) {
+  const allGroups = getDisplayGroupResults(data.groupResults);
+  if (allGroups.length === 0) return '';
+  const items = allGroups.map(group => {
+    const color = getGroupColor(data.groupResults, group.value);
+    const isHidden = hiddenGroups.has(group.value);
+    return `
+      <label class="legend-item ${isHidden ? 'disabled' : ''}" data-group="${escapeHtml(group.value)}">
+        <input type="checkbox"
+               data-scale-group-toggle="true"
+               data-target="${escapeHtml(data.targetLabel)}"
+               data-group="${escapeHtml(group.value)}"
+               ${isHidden ? '' : 'checked'}>
+        <span class="legend-swatch" style="background:${color}"></span>
+        <span>${escapeHtml(group.label)}</span>
+      </label>
+    `;
+  }).join('');
+  return `
+    <div class="scale-group-controls-bar">
+      <span class="scale-group-controls-title">그룹 표시</span>
+      ${items}
+    </div>
+  `;
+}
+
+function buildScaleGroupChartHtml(data, hiddenGroups, viewMode) {
+  const displayGroups = getDisplayGroupResults(data.groupResults, hiddenGroups);
+  const maxScore = data.scoreRange.length;
+  const hideMidpoint = isScaleMidpointHidden(data.targetLabel);
+  return `
+    <div class="scale-group-chart">
+      ${displayGroups.length === 0 ? '<div class="result-empty">표시할 그룹이 없습니다.</div>' : displayGroups.map(group => {
+        const meanTip = {
+          kind: 'scale-mean',
+          mean: group.mean,
+          totalN: group.n,
+          groupLabel: group.label
+        };
+        const chartHtml = viewMode === 'mean'
+          ? buildScaleMeanOnlyHtml(group.mean, maxScore, meanTip, group.scoreResults, { hideMidpoint })
+          : buildScaleDistributionBarHtml(group.scoreResults, maxScore, { hideMidpoint });
+        return `
+          <div class="scale-group-row">
+            <div class="scale-group-label">
+              <strong>${escapeHtml(group.label)}</strong>
+            </div>
+            <div class="scale-group-chart-cell">
+              ${chartHtml}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function buildScaleChartHtml(data, hiddenGroups, viewMode) {
+  const maxScore = data.scoreRange.length;
+  const hideMidpoint = isScaleMidpointHidden(data.targetLabel);
+  if (data.groupResults) return buildScaleGroupChartHtml(data, hiddenGroups, viewMode);
+  const meanTip = {
+    kind: 'scale-mean',
+    mean: data.mean,
+    totalN: data.totalN
+  };
+  const chartHtml = viewMode === 'mean'
+    ? buildScaleMeanOnlyHtml(data.mean, maxScore, meanTip, data.scoreResults, { hideMidpoint })
+    : buildScaleDistributionBarHtml(data.scoreResults, maxScore, { hideMidpoint });
+  return `<div class="scale-chart">${chartHtml}</div>`;
+}
+
+function buildScaleDataTableHtml(data, hiddenGroups = new Set()) {
+  if (!data.groupResults) {
+    const rowsHtml = data.scoreResults.map(result => `
+      <tr>
+        <td>${result.score}점${result.label !== `${result.score}점` ? ` - ${escapeHtml(result.label)}` : ''}</td>
+        <td class="num">${formatPercent(result.pct)}</td>
+        <td class="num">${result.count.toLocaleString()}</td>
+        <td class="num">-</td>
+      </tr>
+    `).join('');
+    const tableHtml = `
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th>점수 / 라벨</th>
+            <th class="num">비율(%)</th>
+            <th class="num">빈도수 (명)</th>
+            <th class="num">평균</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+          <tr class="total-row">
+            <td>합계</td>
+            <td class="num">${formatPercent(100)}</td>
+            <td class="num">${data.totalN.toLocaleString()}</td>
+            <td class="num">${data.mean.toFixed(2)}점</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    return wrapResultTable(tableHtml);
+  }
+
+  const displayGroups = getDisplayGroupResults(data.groupResults, hiddenGroups);
+  const topRow = [
+    `<th rowspan="2">점수 / 라벨</th>`,
+    buildGroupedCountHeader('응답자 전체', data.totalN, 3),
+    ...displayGroups.map(group => buildGroupedCountHeader(group.label, group.n, 3))
+  ].join('');
+  const subRow = [
+    `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th><th class="num">평균</th>`,
+    ...displayGroups.map(() => `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th><th class="num">평균</th>`)
+  ].join('');
+  const bodyRows = data.scoreResults.map(result => {
+    const groupCells = displayGroups.map(group => {
+      const groupResult = group.scoreResults.find(item => item.score === result.score) || { pct: 0, count: 0 };
+      return `<td class="num group-col">${formatPercent(groupResult.pct)}</td><td class="num">${groupResult.count.toLocaleString()}</td><td class="num">-</td>`;
+    }).join('');
+    return `
+      <tr>
+        <td>${result.score}점${result.label !== `${result.score}점` ? ` - ${escapeHtml(result.label)}` : ''}</td>
+        <td class="num group-col">${formatPercent(result.pct)}</td>
+        <td class="num">${result.count.toLocaleString()}</td>
+        <td class="num">-</td>
+        ${groupCells}
+      </tr>
+    `;
+  }).join('');
+  const totalCells = displayGroups.map(group => `<td class="num group-col">${formatPercent(100)}</td><td class="num">${group.n.toLocaleString()}</td><td class="num">${group.mean.toFixed(2)}점</td>`).join('');
+  const tableHtml = `
+    <table class="result-table">
+      <thead>
+        <tr>${topRow}</tr>
+        <tr>${subRow}</tr>
+      </thead>
+      <tbody>
+        ${bodyRows}
+        <tr class="total-row">
+          <td>합계</td>
+          <td class="num group-col">${formatPercent(100)}</td>
+          <td class="num">${data.totalN.toLocaleString()}</td>
+          <td class="num">${data.mean.toFixed(2)}점</td>
+          ${totalCells}
+        </tr>
+      </tbody>
+    </table>
+  `;
+  return wrapResultTable(tableHtml);
+}
+
+function buildDataTableHtml(data, hiddenGroups = new Set()) {
+  if (data.visualType === 'rank') return buildRankDataTableHtml(data, hiddenGroups);
+  if (data.visualType === 'scale') return buildScaleDataTableHtml(data, hiddenGroups);
   return buildChoiceDataTableHtml(data);
 }
 
@@ -4459,7 +5173,7 @@ function aggregateRank(targetLabel, criterionLabel, rows) {
   // 그룹별 비교
   let groupResults = null;
   if (criterionLabel) {
-    const critEntry = resultState.codebookByLabel.get(criterionLabel);
+    const critEntry = getCriterionEntry(criterionLabel);
     const cIdx = filterState.headerMap.get(criterionLabel);
     if (critEntry && cIdx !== undefined) {
       const groupOrder = [...critEntry.options];
@@ -4544,7 +5258,7 @@ function aggregateRank(targetLabel, criterionLabel, rows) {
         }));
         return {
           value: gv,
-          label: `${criterionLabel}: ${gv}`,
+          label: `${critEntry.label}: ${gv}`,
           n: bucket.n,
           ranking: gRanking,
           perOption: gPerOption
@@ -4562,6 +5276,7 @@ function aggregateRank(targetLabel, criterionLabel, rows) {
     optionOrder: visibleOptionOrder,
     totalResults,
     ranking,
+    visualType: 'rank',
     criterionLabel: groupResults ? criterionLabel : null,
     groupResults
   };
@@ -5031,31 +5746,30 @@ function setupOtherResponseModal() {
 }
 
 /* ---------- 섹션 dispatch ---------- */
-function buildSingleSectionHtml(data, rows) {
+function buildChoiceSectionHtml(data, rows) {
   if (!data) return '';
   const { codebookEntry, targetLabel, groupResults } = data;
-  const hidden = resultState.hiddenGroupKeys.get(targetLabel) || new Set();
-
+  const hiddenGroups = resultState.hiddenGroupKeys.get(targetLabel) || new Set();
   const chartHtml = groupResults
-    ? buildGroupCompareChartHtml(data, hidden)
+    ? buildGroupCompareChartHtml(data, hiddenGroups)
     : buildBasicChartHtml(data);
-
-  const legendHtml = groupResults ? buildLegendHtml(data, hidden) : '';
-  const tableHtml = buildDataTableHtml(data);
+  const legendHtml = groupResults ? buildLegendHtml(data, hiddenGroups) : '';
+  const tableHtml = buildDataTableHtml(data, hiddenGroups);
   const otherHtml = buildOtherResponsesHtml(targetLabel, rows);
   const otherTexts = getOtherResponseTexts(targetLabel, rows);
   resultState.otherResponseTexts.set(targetLabel, otherTexts);
-  const fullText = codebookEntry.full
-    ? `<div class="result-sub">Q. ${escapeHtml(codebookEntry.full)}</div>`
+  const fullText = buildQuestionFullHtml(codebookEntry);
+  const visualClass = getResultVisualClass(!!groupResults);
+  const noteHtml = data.isMulti
+    ? '<div class="result-note">복수응답 문항으로, 비율 합계는 100%를 초과할 수 있습니다.</div>'
     : '';
+
   return `
-    <section class="result-section" data-target="${escapeHtml(targetLabel)}" data-type="single">
+    <section class="result-section" data-target="${escapeHtml(targetLabel)}" data-type="${data.isMulti ? 'multiple' : 'single'}">
       <div class="result-header">
-        <div class="result-title">
-          ${escapeHtml(targetLabel)}
-        </div>
+        <div class="result-title">${escapeHtml(targetLabel)}</div>
         ${fullText}
-        ${noteText}
+        ${noteHtml}
       </div>
       <div class="${visualClass}">
         <div class="result-chart-col">${chartHtml}</div>
@@ -5067,29 +5781,30 @@ function buildSingleSectionHtml(data, rows) {
   `;
 }
 
-function buildMultipleSectionHtml(data, rows) {
+function buildScaleSection(data) {
   if (!data) return '';
   const { codebookEntry, targetLabel, groupResults } = data;
-  const hidden = resultState.hiddenGroupKeys.get(targetLabel) || new Set();
-
-  const chartHtml = groupResults
-    ? buildGroupCompareChartHtml(data, hidden)
-    : buildBasicChartHtml(data);
-
-  const legendHtml = groupResults ? buildLegendHtml(data, hidden) : '';
-  const tableHtml = buildDataTableHtml(data);
-  const otherTexts = getOtherResponseTexts(targetLabel, rows);
-  resultState.otherResponseTexts.set(targetLabel, otherTexts);
+  const hiddenGroups = resultState.hiddenGroupKeys.get(targetLabel) || new Set();
+  const viewMode = getScaleViewMode(targetLabel);
+  const hideMidpoint = isScaleMidpointHidden(targetLabel);
+  const chartHtml = buildScaleChartHtml(data, hiddenGroups, viewMode);
+  const legendHtml = groupResults ? buildScaleGroupLegendHtml(data, hiddenGroups) : buildScaleLegendHtml(data);
+  const tableHtml = buildDataTableHtml(data, hiddenGroups);
   const fullText = buildQuestionFullHtml(codebookEntry);
-  const visualClass = getResultVisualClass(!!groupResults);
+  const toggleHtml = buildScaleToggleHtml(targetLabel, viewMode, {
+    showMidpointOption: canHideScaleMidpoint(data),
+    hideMidpoint
+  });
+  const groupControlsHtml = groupResults ? buildScaleGroupControlsHtml(data, hiddenGroups) : '';
+  const visualClass = getResultVisualClass(!!legendHtml);
 
   return `
-    <section class="result-section" data-target="${escapeHtml(targetLabel)}" data-type="multiple">
+    <section class="result-section" data-target="${escapeHtml(targetLabel)}" data-type="scale">
       <div class="result-header">
-        <div class="result-title">
-          ${escapeHtml(targetLabel)}
-        </div>
+        <div class="result-title">${escapeHtml(targetLabel)}</div>
         ${fullText}
+        ${toggleHtml}
+        ${groupControlsHtml}
       </div>
       <div class="${visualClass}">
         <div class="result-chart-col">${chartHtml}</div>
@@ -5098,6 +5813,13 @@ function buildMultipleSectionHtml(data, rows) {
       ${tableHtml}
     </section>
   `;
+}
+
+function buildResultSection(data, rows) {
+  if (!data) return '';
+  if (data.visualType === 'rank') return buildRankSection(data, rows);
+  if (data.visualType === 'scale') return buildScaleSection(data, rows);
+  return buildChoiceSectionHtml(data, rows);
 }
 
 function buildUnsupportedSection(label, entry) {
@@ -5110,7 +5832,7 @@ function buildUnsupportedSection(label, entry) {
         ${fullText}
       </div>
       <div class="result-unsupported">
-        이 문항 유형(<strong>${escapeHtml(typeText)}</strong>)의 시각화는 아직 준비 중이에요. 현재는 <strong>객관식 단일</strong> 문항만 지원합니다.
+        이 문항 유형(<strong>${escapeHtml(typeText)}</strong>)의 시각화는 아직 준비 중이에요. 현재는 <strong>객관식 단일</strong>, <strong>객관식 중복</strong>, <strong>객관식 순위</strong>, <strong>객관식 척도</strong> 문항을 지원합니다.
       </div>
     </section>
   `;
@@ -5153,10 +5875,10 @@ async function renderResults() {
   const sections = targetLabels.map(label => {
     const entry = resultState.codebookByLabel.get(label);
     if (!entry) return buildUnsupportedSection(label, null);
-    if (entry.type !== '객관식 단일') return buildUnsupportedSection(label, entry);
-    const data = aggregateSingle(label, criterionLabel, filteredRows);
+    if (!supportsResultType(entry.type)) return buildUnsupportedSection(label, entry);
+    const data = aggregateResultQuestion(label, criterionLabel, filteredRows);
     if (!data) return buildUnsupportedSection(label, entry);
-    return buildSectionHtml(data, filteredRows);
+    return buildResultSection(data, filteredRows);
   }).join('');
 
   container.innerHTML = sections;
@@ -5227,6 +5949,39 @@ function attachResultEventListeners(container) {
       e.preventDefault();
       e.stopPropagation();
       openOtherResponsesModal(btn.dataset.openOther || '', e);
+    });
+  });
+  container.querySelectorAll('[data-scale-mode]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const mode = btn.dataset.scaleMode;
+      const targetLabel = btn.dataset.target;
+      if (!mode || !targetLabel) return;
+      resultState.scaleViewModes.set(targetLabel, mode);
+      renderResults();
+    });
+  });
+  container.querySelectorAll('[data-scale-hide-midpoint]').forEach(input => {
+    input.addEventListener('change', e => {
+      e.stopPropagation();
+      const targetLabel = input.dataset.target;
+      if (!targetLabel) return;
+      resultState.scaleMidpointHidden.set(targetLabel, !!input.checked);
+      renderResults();
+    });
+  });
+  container.querySelectorAll('[data-scale-group-toggle]').forEach(input => {
+    input.addEventListener('change', e => {
+      e.stopPropagation();
+      const targetLabel = input.dataset.target;
+      const groupValue = input.dataset.group;
+      if (!targetLabel || !groupValue) return;
+      const hidden = resultState.hiddenGroupKeys.get(targetLabel) || new Set();
+      if (input.checked) hidden.delete(groupValue);
+      else hidden.add(groupValue);
+      resultState.hiddenGroupKeys.set(targetLabel, hidden);
+      renderResults();
     });
   });
   container.querySelectorAll('.legend').forEach(legend => {
@@ -5371,6 +6126,19 @@ function formatTooltipHtml(d) {
       const tail = [line(n(d.count))];
       return [...head, ...perRank, ...tail].join('');
     }
+    case 'scale-segment':
+      return [
+        line(`${escapeHtml(String(d.score))}점`),
+        d.scoreLabel && d.scoreLabel !== `${d.score}점` ? line(escapeHtml(d.scoreLabel)) : '',
+        line(pct(d.pct)),
+        line(n(d.count))
+      ].join('');
+    case 'scale-mean':
+      return [
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : '',
+        line(`평균 ${Number(d.mean || 0).toFixed(2)}점`),
+        line(n(d.totalN))
+      ].join('');
     default:
       return '';
   }
