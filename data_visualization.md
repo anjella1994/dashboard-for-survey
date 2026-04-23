@@ -516,3 +516,71 @@ The following visualization rules are fixed for every `객관식 순위` questio
 - Rank data tables include a total row; only per-rank percentage and count totals are aggregated, while `가중 점수` and `종합 순위` stay `-`.
 - Chart option labels should show the full response label on hover, even when the visible text is truncated.
 - Raw-only non-ranked responses in rank questions use a muted red fallback bar and the tooltip format matches other rank segments: option, rank label, percentage, and count.
+
+## Numeric Open Rules
+
+The following visualization rules are fixed for every `주관식 숫자` question.
+
+- Use the question's `raw` column as the source value column.
+- Apply filters based on the label dataset, but read numeric values from the numeric dataset when available.
+- Treat each response as a continuous numeric value.
+
+### Basic Chart
+
+- Render a histogram as the default chart.
+- X-axis uses the observed response range from minimum to maximum.
+- Y-axis uses frequency.
+- The system proposes a default bin count, and the user can change the histogram bin count directly.
+- Show the mean as a bold vertical line with a mean value label.
+- Show the minimum and maximum values at the ends of the axis.
+- Show the current bin count in the chart footer area.
+
+### Group Comparison
+
+- When a comparison criterion is applied, render the full-response histogram in a light gray tone.
+- Overlay each group's response distribution as a colored curved line on top of that histogram.
+- X-axis uses the response range by interval.
+- Y-axis uses density.
+
+### Data Table
+
+- The default table columns are:
+  - `평균`
+  - `최소`
+  - `Q1 (하위 25%)`
+  - `Q2 (중앙값)`
+  - `Q3 (상위 25%)`
+  - `최대`
+  - `응답자 수`
+- When group comparison is active, include both `응답자 전체` and per-group rows.
+
+### Tooltip
+
+- Histogram bar tooltip:
+  - line 1: range
+  - line 2: percentage
+  - line 3: respondent count
+- Mean marker tooltip:
+  - basic chart: mean, respondent count
+- Group comparison line tooltip:
+  - line 1: group name
+  - line 2: range + unit
+  - line 3: percentage
+  - line 4: respondent count
+
+### Legend
+
+- Basic chart: no legend.
+- Group comparison:
+  - show group color and label
+  - provide checkboxes for group visibility
+
+## Text Open Rules
+
+The following dashboard rule is fixed for every `주관식 문자` question.
+
+- `주관식 문자` is not supported as a chart type in the dashboard.
+- Do not render a basic chart for this question type.
+- Do not render a group comparison chart for this question type.
+- If the question appears in the dashboard, show it as an unsupported visualization state instead of attempting a graph.
+- Do not define legend, tooltip, or color rules for `주관식 문자` chart output because chart output is not supported.
