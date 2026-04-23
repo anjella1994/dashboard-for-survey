@@ -798,6 +798,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     margin-bottom: 10px;
   }
   .zone-header-main {
@@ -811,51 +812,55 @@
     font-weight: 700;
     color: var(--text);
   }
-  .zone-limit {
-    font-size: 11.5px;
-    color: var(--text-3);
-  }
-  .criterion-help {
-    margin-top: 8px;
-    font-size: 11.5px;
-    color: var(--text-3);
-  }
-  .criterion-actions {
-    margin-top: 8px;
+  .zone-actions {
     display: flex;
-    justify-content: flex-start;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-left: auto;
   }
-  .criterion-action-btn {
-    font-size: 11.5px;
-    color: var(--text-2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-pill);
-    padding: 6px 10px;
-    background: #fff;
-    transition: all .15s ease;
-  }
-  .criterion-action-btn:hover {
-    color: var(--text);
-    border-color: var(--text-2);
-    background: var(--bg-soft);
-  }
-  .zone-clear-btn {
+  .zone-action-btn {
     font-size: 11px;
     color: var(--text-3);
     border: 1px solid var(--border);
     border-radius: var(--radius-pill);
-    padding: 5px 10px;
+    padding: 6px 11px;
     background: #fff;
+    font-weight: 700;
     transition: all .15s ease;
   }
-  .zone-clear-btn:hover {
+  .zone-action-btn:not(:disabled):hover {
     color: var(--text);
     border-color: var(--text-2);
     background: var(--bg-soft);
   }
+  .zone-action-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .zone-action-btn.is-active {
+    border-color: var(--black);
+    background: var(--black);
+    color: #fff;
+  }
+  .zone-action-btn.is-active:not(:disabled):hover {
+    background: var(--black);
+    border-color: var(--black);
+    color: #fff;
+  }
+  .zone-action-btn.is-delete {
+    background: var(--bg-soft-2);
+    border-color: var(--border);
+    color: var(--text-2);
+  }
+  .zone-action-btn.is-delete:not(:disabled):hover {
+    background: #e6e6e6;
+    border-color: #d0d0d0;
+    color: var(--text);
+  }
   .drop-area {
     position: relative;
-    min-height: 72px;
+    min-height: 92px;
     border: 1.5px dashed var(--border);
     border-radius: var(--radius-sm);
     padding: 9px 10px;
@@ -871,11 +876,9 @@
     align-items: center;
     align-content: center;
   }
-  #drop-target {
-    min-height: 76px;
-  }
+  #drop-target,
   #drop-criterion {
-    min-height: 52px;
+    min-height: 92px;
   }
   .drop-area.drag-over {
     border-color: var(--black);
@@ -885,12 +888,25 @@
     position: absolute;
     inset: 0;
     display: flex;
+    flex-direction: column;
+    gap: 4px;
     align-items: center;
     justify-content: center;
     color: var(--text-4);
     font-size: 12px;
     margin: auto;
     text-align: center;
+    padding: 12px;
+  }
+  .empty-hint-main {
+    color: var(--text-4);
+  }
+  .empty-hint-sub {
+    color: var(--text-4);
+    font-size: 10.5px;
+    line-height: 1.35;
+    white-space: nowrap;
+    max-width: none;
   }
   .drop-area.has-chip .empty-hint { display: none; }
 
@@ -1224,6 +1240,19 @@
     background: var(--black);
     color: #fff;
   }
+  .result-view-btn:disabled {
+    opacity: 0.42;
+    cursor: default;
+  }
+  .result-view-btn[aria-disabled="true"] {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+  .result-view-btn:disabled:hover,
+  .result-view-btn[aria-disabled="true"]:hover {
+    background: transparent;
+    color: var(--text-3);
+  }
   .scale-view-controls {
     display: flex;
     flex-wrap: wrap;
@@ -1244,9 +1273,13 @@
     margin: 0;
   }
 
-  .scale-chart {
+  .scale-chart,
+  .scale-group-chart {
     --scale-track-height: 42px;
     --scale-track-center: calc(var(--scale-track-height) / 2);
+    --scale-chart-lane-height: 82px;
+  }
+  .scale-chart {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -1255,11 +1288,12 @@
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-height: var(--scale-chart-lane-height);
   }
   .scale-mean-row {
     position: relative;
     width: 100%;
-    height: 68px;
+    height: var(--scale-chart-lane-height);
   }
   .scale-mean-row.centered {
     position: absolute;
@@ -1319,16 +1353,6 @@
   .scale-summary-item.is-positive {
     text-align: right;
   }
-  .scale-segment-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.92);
-    white-space: nowrap;
-    pointer-events: none;
-  }
-  .scale-segment-label.is-dark {
-    color: rgba(20,20,20,0.78);
-  }
   .scale-mean {
     position: absolute;
     top: 0;
@@ -1339,23 +1363,6 @@
     gap: 5px;
     pointer-events: auto;
     z-index: 2;
-  }
-  .scale-mean-value {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    background: #fff;
-    padding: 2px 7px;
-    border-radius: 999px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    white-space: nowrap;
-  }
-  .scale-mean-mark {
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 8px solid var(--text);
   }
   .scale-axis {
     height: 14px;
@@ -1419,8 +1426,6 @@
     white-space: nowrap;
   }
   .scale-group-chart {
-    --scale-track-height: 42px;
-    --scale-track-center: calc(var(--scale-track-height) / 2);
     display: flex;
     flex-direction: column;
     gap: 14px;
@@ -1429,11 +1434,11 @@
     display: grid;
     grid-template-columns: 130px minmax(0, 1fr);
     gap: 12px;
-    align-items: center;
+    align-items: start;
   }
   .scale-mean-only {
     position: relative;
-    min-height: 68px;
+    min-height: var(--scale-chart-lane-height);
   }
   .scale-mean-background {
     position: absolute;
@@ -1462,6 +1467,139 @@
     transform: translate(-50%, -50%);
     gap: 0;
     pointer-events: auto;
+  }
+  .derived-scale-chart {
+    --derived-violin-height: 86px;
+    --scale-track-height: var(--derived-violin-height);
+    --scale-track-center: calc(var(--derived-violin-height) / 2);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .derived-scale-violin-wrap {
+    position: relative;
+    min-height: var(--derived-violin-height);
+  }
+  .derived-scale-violin {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .derived-scale-violin-shape {
+    opacity: 0.82;
+    transition: opacity .15s ease, fill .15s ease;
+  }
+  .derived-scale-violin-shape.is-muted {
+    opacity: 0.36;
+  }
+  .derived-scale-centerline {
+    stroke: #b7b7b7;
+    stroke-width: 1.5;
+    stroke-dasharray: 3 4;
+    vector-effect: non-scaling-stroke;
+  }
+  .derived-scale-mean-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    z-index: 4;
+  }
+  .derived-scale-mean-line {
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: rgba(10,10,10,0.72);
+  }
+  .derived-scale-mean-dot {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--black);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.14);
+  }
+  .derived-scale-mean-label {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    white-space: nowrap;
+  }
+  .derived-scale-quartile {
+    position: absolute;
+    top: calc(var(--scale-track-center) - 10px);
+    transform: translateX(-50%);
+    width: 24px;
+    height: 32px;
+    background: transparent;
+    cursor: help;
+    pointer-events: auto;
+    z-index: 3;
+  }
+  .derived-scale-quartile::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 1px;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 9px solid rgba(10,10,10,0.72);
+  }
+  .derived-scale-quartile.is-muted::before {
+    border-top-color: rgba(10,10,10,0.34);
+  }
+  .derived-scale-quartile::after {
+    content: attr(data-label);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 3px);
+    transform: translateX(-50%);
+    color: var(--text-2);
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .derived-scale-quartile.is-muted::after {
+    display: none;
+  }
+  .derived-scale-table {
+    table-layout: fixed;
+    min-width: 760px;
+  }
+  .derived-scale-table th:first-child,
+  .derived-scale-table td:first-child {
+    width: 210px;
+  }
+  .derived-scale-table th.metric,
+  .derived-scale-table td.metric {
+    width: 96px;
+  }
+  .derived-scale-table th.respondents,
+  .derived-scale-table td.respondents {
+    width: 120px;
+  }
+  .derived-scale-table td.mean-value {
+    color: var(--text);
+    font-weight: 700;
   }
   .scale-group-label {
     min-height: var(--scale-track-height);
@@ -1492,13 +1630,14 @@
   }
   .scale-group-controls-title {
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--text);
     margin-right: 2px;
   }
   .scale-group-controls-bar .legend-item {
     margin: 0;
     min-width: 0;
+    font-weight: 400;
   }
   .scale-group-controls-bar .legend-item span:last-child {
     word-break: keep-all;
@@ -1527,18 +1666,416 @@
     min-width: 0;
   }
   .scale-score-key {
-    font-weight: 500;
+    font-weight: 400;
     color: var(--text-2);
   }
   .scale-score-text {
-    font-weight: 700;
+    font-weight: 400;
     color: var(--text);
     line-height: 1.35;
     word-break: keep-all;
   }
-  .legend-panel-divider {
-    height: 1px;
-    background: var(--border-2);
+  .scale-compare-actions {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .scale-compare-trigger {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 9px 14px;
+    border-radius: 999px;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .scale-compare-trigger:hover {
+    background: var(--bg-soft);
+    border-color: var(--border-2);
+  }
+  .scale-compare-summary {
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.5;
+  }
+  .scale-compare-summary strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .scale-compare-section {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-2);
+  }
+  .scale-compare-section.is-flush {
+    margin-top: 12px;
+    padding-top: 0;
+    border-top: 0;
+  }
+  .scale-compare-header {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .scale-compare-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .scale-compare-sub {
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.45;
+  }
+  .scale-compare-card {
+    position: relative;
+  }
+  .scale-compare-card .legend-panel {
+    align-self: flex-start;
+    padding-top: 0;
+  }
+  .scale-compare-chart {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .scale-compare-rows-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .scale-compare-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .scale-compare-line-svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .scale-compare-line {
+    fill: none;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+  }
+  .scale-compare-line.is-overall {
+    stroke: var(--black);
+    stroke-width: 1.4;
+    stroke-dasharray: none;
+    opacity: 0.82;
+  }
+  .scale-compare-row {
+    --scale-compare-track-top: 22px;
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 14px;
+    align-items: start;
+  }
+  .scale-compare-label {
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text);
+    word-break: keep-all;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+  }
+  .scale-compare-plot {
+    position: relative;
+    min-height: 92px;
+  }
+  .scale-compare-track {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--scale-compare-track-top);
+    height: 2px;
+    background: #d7d7d7;
+    transform: translateY(-50%);
+  }
+  .scale-compare-distribution-bg {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: var(--scale-compare-track-top);
+    height: 42px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .scale-compare-distribution-bg .scale-bar,
+  .scale-compare-distribution-bg .scale-track {
+    position: static;
+    height: 100%;
+  }
+  .scale-compare-distribution-bg .scale-track {
+    transform: none;
+    opacity: 0.22;
+  }
+  .scale-compare-distribution-bg .scale-track.is-muted {
+    opacity: 0.22;
+  }
+  .scale-compare-distribution-bg .derived-scale-violin {
+    position: absolute;
+    inset: 0;
+    opacity: 1;
+  }
+  .scale-compare-row-axis {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .scale-compare-row-axis-point {
+    position: absolute;
+    top: calc(var(--scale-compare-track-top) - 5px);
+    transform: translateX(-50%);
+    width: 1px;
+    height: 10px;
+    background: #b8b8b8;
+  }
+  .scale-compare-row-axis-label {
+    position: absolute;
+    top: calc(var(--scale-compare-track-top) + 28px);
+    transform: translateX(-50%);
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-3);
+    white-space: nowrap;
+    z-index: 4;
+    line-height: 1.3;
+  }
+  .scale-compare-row-axis-score {
+    display: block;
+    color: var(--text-3);
+    font-weight: 400;
+  }
+  .scale-compare-row-axis-copy {
+    position: absolute;
+    top: calc(var(--scale-compare-track-top) + 48px);
+    display: block;
+    max-width: min(220px, 38vw);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--text-3);
+  }
+  .scale-compare-row-axis-copy.is-left {
+    left: 0;
+    text-align: left;
+  }
+  .scale-compare-row-axis-copy.is-right {
+    right: 0;
+    text-align: right;
+  }
+  .scale-compare-dot {
+    position: absolute;
+    top: var(--scale-compare-track-top);
+    transform: translate(-50%, -50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 5px 14px rgba(0,0,0,0.1);
+    z-index: 2;
+  }
+  .scale-compare-dot.is-overall {
+    width: 34px;
+    height: 34px;
+    background: var(--black);
+    color: #fff;
+    border: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    z-index: 3;
+  }
+  .scale-compare-dot.is-group {
+    color: #fff;
+    z-index: 3;
+  }
+  .scale-compare-dot.is-group.has-overall {
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.92), 0 5px 14px rgba(0,0,0,0.12);
+  }
+  .scale-compare-dot.is-compact {
+    width: 8px;
+    height: 8px;
+    border: 1px solid #fff;
+    box-sizing: content-box;
+    box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08);
+  }
+  .scale-compare-dot.is-compact.is-overall {
+    width: 8px;
+    height: 8px;
+    background: var(--black);
+    border: 1px solid #fff;
+    box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08);
+  }
+  .scale-compare-dot.is-compact.is-group.has-overall {
+    box-shadow: 0 0 0 0.5px rgba(0,0,0,0.08);
+  }
+  .scale-compare-distribution-row {
+    align-items: start;
+  }
+  .scale-compare-distribution-cell {
+    min-width: 0;
+  }
+  .scale-compare-distribution-cell .scale-chart,
+  .scale-compare-distribution-cell .derived-scale-chart {
+    gap: 8px;
+  }
+  .scale-compare-distribution-cell .derived-scale-chart {
+    position: relative;
+    min-height: 92px;
+    --derived-violin-height: 44px;
+    --scale-track-height: var(--derived-violin-height);
+    --scale-track-center: var(--scale-compare-track-top);
+  }
+  .scale-compare-distribution-cell .derived-scale-violin-wrap {
+    min-height: 92px;
+  }
+  .scale-compare-distribution-cell .derived-scale-violin {
+    inset: auto 0 auto 0;
+    top: calc(var(--scale-compare-track-top) - (var(--derived-violin-height) / 2));
+    height: var(--derived-violin-height);
+  }
+  .scale-compare-distribution-cell .scale-bar-wrap {
+    position: relative;
+    min-height: 92px;
+  }
+  .scale-compare-distribution-cell .scale-bar-wrap > .scale-bar {
+    position: absolute;
+    top: calc(var(--scale-compare-track-top) - var(--scale-track-center));
+    left: 0;
+    right: 0;
+  }
+  .scale-compare-distribution-cell .scale-summary {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 10px;
+  }
+  .scale-compare-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .scale-compare-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-2);
+    cursor: pointer;
+    user-select: none;
+  }
+  .scale-compare-legend-item.disabled {
+    color: var(--text-4);
+  }
+  .scale-compare-legend-item input {
+    width: 13px;
+    height: 13px;
+    accent-color: #4a4a4a;
+    margin: 0;
+    cursor: pointer;
+  }
+  .scale-compare-legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .scale-compare-legend-dot.is-overall {
+    background: var(--black);
+    border: 0;
+  }
+  .scale-compare-legend-item.disabled .scale-compare-legend-dot {
+    opacity: 0.28;
+  }
+  .scale-compare-legend-note {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.4;
+  }
+  .scale-compare-modal-note {
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.5;
+  }
+  .scale-compare-modal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .scale-compare-modal-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .scale-compare-modal-item:hover {
+    background: #fcfcfc;
+    border-color: var(--border-2);
+  }
+  .scale-compare-modal-item input {
+    margin-top: 2px;
+  }
+  .scale-compare-modal-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .scale-compare-modal-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.45;
+  }
+  .scale-compare-modal-full {
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.45;
+  }
+  .scale-compare-modal-empty {
+    padding: 18px 0 8px;
+    font-size: 12px;
+    color: var(--text-3);
+    text-align: center;
+  }
+
+  @media (max-width: 900px) {
+    .scale-compare-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .scale-compare-label {
+      padding-right: 0;
+    }
   }
 
   .result-table-wrap {
@@ -1624,10 +2161,18 @@
   .result-table tr.total-row td:first-child {
     background: #fafafa;
   }
+  .result-table.derived-scale-table td.mean-value {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .result-table td.mean-value {
+    color: var(--text);
+    font-weight: 700;
+  }
   .result-table-note {
     margin: 8px 12px 0;
-    font-size: 11px;
-    color: var(--text-3);
+    font-size: 11.5px;
+    color: var(--text-2);
     line-height: 1.45;
   }
   .other-response-open-btn {
@@ -1891,6 +2436,37 @@
   .modal-body {
     overflow-y: auto;
     padding: 8px 16px 16px;
+  }
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 16px 16px;
+    border-top: 1px solid var(--border);
+    background: #fff;
+  }
+  .modal-action-btn {
+    border: 1px solid var(--border);
+    background: #fff;
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 14px;
+    border-radius: 999px;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .modal-action-btn:hover {
+    background: var(--bg-soft);
+    color: var(--text);
+  }
+  .modal-action-btn.primary {
+    background: var(--black);
+    border-color: var(--black);
+    color: #fff;
+  }
+  .modal-action-btn.primary:hover {
+    background: #2a2a2a;
+    border-color: #2a2a2a;
   }
   #other-response-modal {
     background: transparent;
@@ -2164,27 +2740,33 @@
           <div class="zone-header">
             <div class="zone-header-main">
               <div class="zone-title">보고 싶은 문항</div>
-              <button type="button" id="target-clear-btn" class="zone-clear-btn">모두 삭제</button>
             </div>
-            <div class="zone-limit"><span id="target-count">0</span> / 10</div>
+            <div class="zone-actions">
+              <button type="button" id="target-scale-compare-btn" class="zone-action-btn" disabled>여러 문항 한 번에 비교하기</button>
+              <button type="button" id="target-clear-btn" class="zone-action-btn is-delete">모두 삭제</button>
+            </div>
           </div>
           <div class="drop-area" id="drop-target" data-zone="target" data-limit="10">
-            <div class="empty-hint">좌측 문항을 여기로 드래그해 주세요.</div>
+            <div class="empty-hint">
+              <div class="empty-hint-main">좌측 문항을 여기로 드래그해 주세요.</div>
+              <div class="empty-hint-sub">같은 척도 길이의 문항을 2개 이상 올리면, 여러 문항을 한 번에 비교할 수 있어요.</div>
+            </div>
           </div>
         </div>
         <div class="zone-card">
           <div class="zone-header">
             <div class="zone-header-main">
               <div class="zone-title">그룹별 비교</div>
-              <button type="button" id="criterion-clear-btn" class="zone-clear-btn">삭제</button>
             </div>
-            <div class="zone-limit"><span id="criterion-count">0</span> / 1</div>
+            <div class="zone-actions">
+              <button type="button" id="criterion-year-btn" class="zone-action-btn" hidden>연도별 비교하기</button>
+              <button type="button" id="criterion-clear-btn" class="zone-action-btn is-delete">삭제</button>
+            </div>
           </div>
           <div class="drop-area" id="drop-criterion" data-zone="criterion" data-limit="1">
-            <div class="empty-hint">좌측 문항을 여기로 드래그해 주세요.</div>
-          </div>
-          <div class="criterion-actions">
-          <button type="button" id="criterion-year-btn" class="criterion-action-btn" hidden>연도별 비교하기</button>
+            <div class="empty-hint">
+              <div class="empty-hint-main">좌측 문항을 여기로 드래그해 주세요.</div>
+            </div>
           </div>
         </div>
       </div>
@@ -2239,6 +2821,25 @@
     <div class="modal-body">
       <div class="other-modal-subtitle" id="other-response-modal-subtitle"></div>
       <ul class="other-modal-list" id="other-response-modal-list"></ul>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="scale-compare-modal" role="dialog" aria-modal="true" aria-labelledby="scale-compare-modal-title">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="scale-compare-modal-title">다른 문항과 묶어서 보기</div>
+      <button class="modal-close" id="close-scale-compare-btn" aria-label="닫기">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="scale-compare-modal-note" id="scale-compare-modal-note"></div>
+      <div class="scale-compare-modal-list" id="scale-compare-modal-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="modal-action-btn" id="cancel-scale-compare-btn">취소</button>
+      <button type="button" class="modal-action-btn primary" id="apply-scale-compare-btn">적용</button>
     </div>
   </div>
 </div>
@@ -2505,8 +3106,218 @@ function parseCSV(text) {
   return rows;
 }
 
+async function readTabularFile(file, maxRows = null) {
+  const ext = (file && file.name ? file.name.split('.').pop() : '').toLowerCase();
+  if (ext === 'csv') {
+    const text = await readAsText(file);
+    const rows = parseCSV(text);
+    return {
+      rows: maxRows ? rows.slice(0, maxRows) : rows,
+      contentType: 'csv-text',
+      content: text
+    };
+  }
+  if (ext === 'xlsx') {
+    const buf = await readAsArrayBuffer(file);
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, raw: true })
+      .map(r => (r || []).map(v => v == null ? '' : String(v)));
+    return {
+      rows: maxRows ? rows.slice(0, maxRows) : rows,
+      contentType: 'xlsx-base64',
+      content: arrayBufferToBase64(buf)
+    };
+  }
+  throw new Error('unsupported');
+}
+
 function normalizeHeader(s) {
   return String(s || '').replace(/^\uFEFF/, '').trim().toLowerCase();
+}
+
+function isFreeTextHeaderName(headerName) {
+  const normalized = normalizeHeader(headerName);
+  return normalized.includes('기타_텍스트')
+    || normalized.includes('기타 텍스트')
+    || normalized.includes('other_text')
+    || normalized.endsWith('__기타')
+    || normalized.endsWith('__other');
+}
+
+function isNumericLikeResponseValue(value) {
+  const normalized = cleanCell(value);
+  if (!normalized) return false;
+  return /^-?\d+(\.\d+)?(\|-?\d+(\.\d+)?)*$/.test(normalized);
+}
+
+const REQUIRED_CODEBOOK = ['question_no', 'question_label', 'response_type', 'data_column_role'];
+const REQUIRED_RESPONSE = ['survey_year', 'respondent_no'];
+
+function checkColumns(headerRow, required) {
+  const headerSet = new Set((headerRow || []).map(normalizeHeader));
+  const missing = required.filter(c => !headerSet.has(c.toLowerCase()));
+  return { ok: missing.length === 0, missing };
+}
+
+function detectResponseType(rows) {
+  if (!rows || rows.length < 2) return { type: 'unknown', sampleSize: 0 };
+  const header = rows[0] || [];
+  const skipCols = Math.min(4, header.length);
+  let numeric = 0;
+  let textLike = 0;
+  let samples = 0;
+  const dataRows = rows.slice(1, 31);
+  dataRows.forEach(r => {
+    for (let c = skipCols; c < (r || []).length; c++) {
+      if (isFreeTextHeaderName(header[c])) continue;
+      const v = String(r[c] == null ? '' : r[c]).trim();
+      if (!v) continue;
+      samples += 1;
+      if (isNumericLikeResponseValue(v)) numeric += 1;
+      else textLike += 1;
+    }
+  });
+  if (samples === 0) return { type: 'unknown', sampleSize: 0 };
+  const textRatio = textLike / samples;
+  let type = 'ambiguous';
+  if (textRatio < 0.02) type = 'numeric';
+  else if (textRatio >= 0.05) type = 'label';
+  return { type, sampleSize: samples };
+}
+
+function validateFileForKey(key, rows) {
+  if (!rows || rows.length === 0) {
+    return { ok: false, error: '파일이 비어 있습니다.' };
+  }
+  const header = rows[0] || [];
+  if (key === 'codebook') {
+    const chk = checkColumns(header, REQUIRED_CODEBOOK);
+    if (!chk.ok) {
+      return { ok: false, error: `문항 코드북 형식이 올바르지 않습니다. 누락된 컬럼: ${chk.missing.join(', ')}` };
+    }
+    return { ok: true };
+  }
+  if (key === 'value' || key === 'label') {
+    const chk = checkColumns(header, REQUIRED_RESPONSE);
+    if (!chk.ok) {
+      return { ok: false, error: `응답 데이터셋 형식이 올바르지 않습니다. 누락된 컬럼: ${chk.missing.join(', ')}` };
+    }
+    const det = detectResponseType(rows);
+    if (det.type === 'unknown') {
+      return { ok: false, error: '데이터 열을 찾을 수 없어 형식을 판별할 수 없습니다.' };
+    }
+    if (key === 'value' && det.type === 'label') {
+      return { ok: false, error: '라벨형 데이터로 보입니다. 숫자 코드가 담긴 숫자형 파일을 업로드해 주세요.' };
+    }
+    if (key === 'label' && det.type === 'numeric') {
+      return { ok: false, error: '숫자형 데이터로 보입니다. 라벨이 담긴 라벨형 파일을 업로드해 주세요.' };
+    }
+  }
+  return { ok: true };
+}
+
+function getCodebookQuestionLabels(rows) {
+  if (!rows || rows.length < 2) return [];
+  const header = (rows[0] || []).map(normalizeHeader);
+  const iLabel = header.indexOf('question_label');
+  if (iLabel < 0) return [];
+  const labels = [];
+  for (let r = 1; r < rows.length; r++) {
+    const label = cleanCell((rows[r] || [])[iLabel]);
+    if (label) labels.push(label);
+  }
+  return labels;
+}
+
+function getResponseQuestionHeaders(rows) {
+  if (!rows || rows.length === 0) return [];
+  return (rows[0] || []).slice(2).map(cleanCell);
+}
+
+function arraysEqualNormalized(a, b) {
+  if ((a || []).length !== (b || []).length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (cleanCell(a[i]) !== cleanCell(b[i])) return false;
+  }
+  return true;
+}
+
+function findFirstHeaderMismatch(a, b) {
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    if (cleanCell(a[i]) !== cleanCell(b[i])) {
+      return { index: i, left: cleanCell(a[i]), right: cleanCell(b[i]) };
+    }
+  }
+  return null;
+}
+
+function validateCodebookAgainstResponse(codebookRows, responseRows, responseLabel) {
+  const codebookLabels = getCodebookQuestionLabels(codebookRows);
+  const responseHeaders = getResponseQuestionHeaders(responseRows);
+  if (codebookLabels.length === 0 || responseHeaders.length === 0) return { ok: true };
+  if (arraysEqualNormalized(codebookLabels, responseHeaders)) return { ok: true };
+  if (codebookLabels.length !== responseHeaders.length) {
+    return {
+      ok: false,
+      error: `문항 코드북과 ${responseLabel}의 문항 수가 다릅니다. 코드북 ${codebookLabels.length}개, 데이터셋 ${responseHeaders.length}개입니다.`
+    };
+  }
+  const mismatch = findFirstHeaderMismatch(codebookLabels, responseHeaders);
+  if (mismatch) {
+    return {
+      ok: false,
+      error: `문항 코드북과 ${responseLabel}의 문항 순서 또는 이름이 다릅니다. ${mismatch.index + 3}번째 응답 데이터 컬럼을 확인해 주세요.`
+    };
+  }
+  return { ok: true };
+}
+
+function validateResponsePair(valueRows, labelRows) {
+  if (!valueRows || !labelRows) return { ok: true };
+  const valueHeader = (valueRows[0] || []).map(cleanCell);
+  const labelHeader = (labelRows[0] || []).map(cleanCell);
+  if (!arraysEqualNormalized(valueHeader, labelHeader)) {
+    return { ok: false, error: '응답 데이터셋 숫자형과 라벨형의 가로 첫행 구조가 서로 다릅니다.' };
+  }
+  if (valueRows.length !== labelRows.length) {
+    return { ok: false, error: `응답 데이터셋 숫자형과 라벨형의 행 수가 다릅니다. 숫자형 ${valueRows.length - 1}행, 라벨형 ${labelRows.length - 1}행입니다.` };
+  }
+  for (let r = 1; r < valueRows.length; r++) {
+    const vRow = valueRows[r] || [];
+    const lRow = labelRows[r] || [];
+    if (cleanCell(vRow[0]) !== cleanCell(lRow[0]) || cleanCell(vRow[1]) !== cleanCell(lRow[1])) {
+      return { ok: false, error: `응답 데이터셋 숫자형과 라벨형의 세로 첫행 기준값이 ${r + 1}번째 행에서 다릅니다.` };
+    }
+    const maxCols = Math.max(vRow.length, lRow.length);
+    for (let c = 2; c < maxCols; c++) {
+      const vFilled = cleanCell(vRow[c]) !== '';
+      const lFilled = cleanCell(lRow[c]) !== '';
+      if (vFilled !== lFilled) {
+        const headerName = valueHeader[c] || `${c + 1}번째 컬럼`;
+        return { ok: false, error: `응답 데이터셋 숫자형과 라벨형의 값 위치 구조가 다릅니다. ${r + 1}번째 행 / ${headerName} 컬럼을 확인해 주세요.` };
+      }
+    }
+  }
+  return { ok: true };
+}
+
+function validateBundleConsistency(rowsByKey) {
+  const { codebook, value, label } = rowsByKey;
+  if (codebook && value) {
+    const result = validateCodebookAgainstResponse(codebook, value, '응답 데이터셋_숫자형');
+    if (!result.ok) return result;
+  }
+  if (codebook && label) {
+    const result = validateCodebookAgainstResponse(codebook, label, '응답 데이터셋_라벨형');
+    if (!result.ok) return result;
+  }
+  if (value && label) {
+    const result = validateResponsePair(value, label);
+    if (!result.ok) return result;
+  }
+  return { ok: true };
 }
 
 async function loadCodebookRows(fileRec) {
@@ -2786,6 +3597,7 @@ function setupSelectionAndDragDrop() {
   const countEl = document.getElementById('selection-count');
   const clearBtn = document.getElementById('selection-clear-btn');
   const targetClearBtn = document.getElementById('target-clear-btn');
+  const targetScaleCompareBtn = document.getElementById('target-scale-compare-btn');
   const criterionClearBtn = document.getElementById('criterion-clear-btn');
   const criterionYearBtn = document.getElementById('criterion-year-btn');
   const criterionZone = document.getElementById('drop-criterion');
@@ -2815,6 +3627,14 @@ function setupSelectionAndDragDrop() {
   clearBtn.addEventListener('click', clearSelection);
   if (targetClearBtn) {
     targetClearBtn.addEventListener('click', () => clearDropZone('drop-target'));
+  }
+  if (targetScaleCompareBtn) {
+    targetScaleCompareBtn.addEventListener('click', () => {
+      if (targetScaleCompareBtn.disabled) return;
+      resultState.targetScaleCompareMode = !resultState.targetScaleCompareMode;
+      refreshTargetScaleCompareControl();
+      renderResults();
+    });
   }
   if (criterionClearBtn) {
     criterionClearBtn.addEventListener('click', () => clearDropZone('drop-criterion'));
@@ -2916,8 +3736,7 @@ function setupSelectionAndDragDrop() {
   function refreshZoneState(zone) {
     const chips = zone.querySelectorAll('.chip');
     zone.classList.toggle('has-chip', chips.length > 0);
-      const cEl = document.getElementById(zone.dataset.zone === 'target' ? 'target-count' : 'criterion-count');
-      if (cEl) cEl.textContent = String(chips.length);
+    if (zone.dataset.zone === 'target') refreshTargetScaleCompareControl();
   }
 }
 
@@ -3433,6 +4252,7 @@ function setupSavedModal() {
   const closeDataUpdateBtn = document.getElementById('close-data-update-btn');
   const dataUpdateList = document.getElementById('data-update-list');
   const dataUpdateFileInput = document.getElementById('data-update-file-input');
+  let lastReplacedDataKey = '';
 
   function refreshCount() {
     if (savedCountBadge) savedCountBadge.textContent = loadSurveys().length;
@@ -3613,6 +4433,7 @@ function setupSavedModal() {
         <div class="saved-main">
           <div class="saved-title">${escapeHtml(item.label)}</div>
           <div class="saved-meta">${escapeHtml((item.file && item.file.name) || '파일 없음')}</div>
+          ${lastReplacedDataKey === item.key ? '<div class="saved-meta">교체하였습니다.</div>' : ''}
         </div>
         <div class="saved-actions">
           <button type="button" class="saved-rename" data-file-update="${item.key}">교체하기</button>
@@ -3660,7 +4481,29 @@ function setupSavedModal() {
     const idx = surveys.findIndex(s => s.id === currentId);
     if (idx < 0) return;
 
-    const rawFile = await convertFileToStoredRec(file);
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    if (!['csv', 'xlsx'].includes(ext)) {
+      throw new Error('지원하지 않는 파일 형식입니다. .csv 또는 .xlsx 파일만 업로드할 수 있습니다.');
+    }
+    const parsedUpload = await readTabularFile(file);
+    const fileResult = validateFileForKey(key, parsedUpload.rows);
+    if (!fileResult.ok) throw new Error(fileResult.error);
+
+    const currentFiles = surveys[idx].files || {};
+    const rowsByKey = {
+      codebook: key === 'codebook' ? parsedUpload.rows : await loadCodebookRows(currentFiles.codebook),
+      value: key === 'value' ? parsedUpload.rows : await loadCodebookRows(currentFiles.value),
+      label: key === 'label' ? parsedUpload.rows : await loadCodebookRows(currentFiles.label)
+    };
+    const bundleResult = validateBundleConsistency(rowsByKey);
+    if (!bundleResult.ok) throw new Error(bundleResult.error);
+
+    const rawFile = {
+      name: file.name,
+      size: file.size,
+      contentType: parsedUpload.contentType,
+      content: parsedUpload.content
+    };
     let storedRef = rawFile;
     try {
       const persisted = await persistStoredFile(currentId, key, rawFile);
@@ -3679,9 +4522,9 @@ function setupSavedModal() {
         renderTree(buildQuestionTree(rows));
       }
     } catch (_) {}
+    lastReplacedDataKey = key;
     renderDataUpdateList();
     renderResults();
-    alert('데이터 파일을 교체했습니다.');
   }
 
   refreshCount();
@@ -3720,8 +4563,8 @@ function setupSavedModal() {
       const key = dataUpdateFileInput.dataset.targetKey;
       try {
         await handleDataFileReplace(file, key);
-      } catch (_) {
-        alert('파일 교체 중 오류가 발생했습니다. CSV/XLSX 파일인지 확인해 주세요.');
+      } catch (err) {
+        alert((err && err.message) || '파일 교체 중 오류가 발생했습니다. 업로드 파일과 연결된 데이터 구조를 확인해 주세요.');
       } finally {
         dataUpdateFileInput.value = '';
       }
@@ -3764,10 +4607,6 @@ function getScaleColor(score, maxScore) {
   const idx = Math.round(((score - 1) * (SCALE_DIVERGING_PALETTE.length - 1)) / (maxScore - 1));
   return SCALE_DIVERGING_PALETTE[Math.max(0, Math.min(SCALE_DIVERGING_PALETTE.length - 1, idx))];
 }
-function isScaleDarkLabel(score, maxScore) {
-  const mid = (maxScore + 1) / 2;
-  return Math.abs(score - mid) < 0.6;
-}
 
 const resultState = {
   codebookByLabel: new Map(),
@@ -3776,10 +4615,14 @@ const resultState = {
   hiddenRankKeys: new Map(),
   scaleViewModes: new Map(),
   scaleMidpointHidden: new Map(),
+  scaleCompareSelections: new Map(),
+  targetScaleCompareMode: false,
   otherResponseTexts: new Map(),
   tooltipEl: null,
   initialized: false
 };
+
+const TARGET_SCALE_COMPARE_VIEW_KEY = '__target_scale_compare__';
 
 function parseValueCodeMap(text) {
   const map = new Map();
@@ -3849,14 +4692,53 @@ function getCriterionChipLabel() {
   return chip ? (chip.dataset.key || chip.dataset.label) : null;
 }
 
+function getScaleCompareGroupKey(entry) {
+  if (!entry || !isScaleChoiceType(entry.type)) return '';
+  const valueCount = Number(entry.valueCount);
+  if (!Number.isFinite(valueCount)) return '';
+  return String(Math.round(valueCount));
+}
+
+function getTargetScaleCompareLabels(targetLabels = getTargetChipLabels()) {
+  const scaleItems = targetLabels.map(label => {
+    const entry = resultState.codebookByLabel.get(label);
+    return { label, entry };
+  }).filter(item => item.entry && isScaleChoiceType(item.entry.type));
+  if (scaleItems.length !== targetLabels.length || scaleItems.length < 2) return [];
+
+  const groups = new Map();
+  scaleItems.forEach(({ label, entry }) => {
+    const key = getScaleCompareGroupKey(entry);
+    if (!key) return;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(label);
+  });
+  if (groups.size !== 1) return [];
+  const labels = Array.from(groups.values())[0] || [];
+  return labels.length >= 2 ? labels : [];
+}
+
+function refreshTargetScaleCompareControl() {
+  const btn = document.getElementById('target-scale-compare-btn');
+  if (!btn) return;
+  const labels = getTargetScaleCompareLabels();
+  const enabled = labels.length >= 2;
+  btn.disabled = !enabled;
+  btn.classList.toggle('is-active', enabled);
+  btn.textContent = resultState.targetScaleCompareMode ? '개별 문항 보기' : '여러 문항 한 번에 비교하기';
+  if (!enabled) {
+    resultState.targetScaleCompareMode = false;
+    btn.classList.remove('is-active');
+    btn.textContent = '여러 문항 한 번에 비교하기';
+  }
+}
+
 function clearDropZone(zoneId) {
   const zone = document.getElementById(zoneId);
   if (!zone) return;
   zone.querySelectorAll('.chip').forEach(chip => chip.remove());
   zone.classList.remove('has-chip');
-  const countId = zone.dataset.zone === 'target' ? 'target-count' : 'criterion-count';
-  const countEl = document.getElementById(countId);
-  if (countEl) countEl.textContent = '0';
+  if (zoneId === 'drop-target') refreshTargetScaleCompareControl();
 }
 
 function getFilteredLabelDataRows() {
@@ -4211,6 +5093,20 @@ function getScaleScoreLabel(entry, score) {
   return mapped || `${score}점`;
 }
 
+function isDerivedScaleEntry(entry) {
+  return !!(entry && isScaleChoiceType(entry.type) && cleanCell(entry.role) === 'derived');
+}
+
+function getScaleMeanLeftPct(mean, maxScore) {
+  if (!Number.isFinite(mean) || mean <= 0) return null;
+  if (!Number.isFinite(maxScore) || maxScore <= 1) return 50;
+  return Math.max(0, Math.min(100, ((mean - 1) / (maxScore - 1)) * 100));
+}
+
+function formatScaleCompareMean(mean) {
+  return Number.isFinite(mean) && mean > 0 ? mean.toFixed(2) : '';
+}
+
 function getScalePolaritySummary(scoreResults) {
   const mid = (Array.isArray(scoreResults) ? scoreResults.length : 0) > 0
     ? ((scoreResults.length + 1) / 2)
@@ -4238,6 +5134,51 @@ function getScalePolaritySummary(scoreResults) {
   });
 }
 
+function getScaleValueStats(values) {
+  const nums = (Array.isArray(values) ? values : []).filter(Number.isFinite);
+  const n = nums.length;
+  if (n === 0) return { n: 0, mean: 0, min: 0, q1: 0, median: 0, q3: 0, max: 0 };
+  const initial = { sum: 0, min: nums[0], max: nums[0] };
+  const summary = nums.reduce((acc, value) => ({
+    sum: acc.sum + value,
+    min: Math.min(acc.min, value),
+    max: Math.max(acc.max, value)
+  }), initial);
+  const sorted = [...nums].sort((a, b) => a - b);
+  const quantile = p => {
+    if (sorted.length === 1) return sorted[0];
+    const pos = (sorted.length - 1) * p;
+    const base = Math.floor(pos);
+    const rest = pos - base;
+    const next = sorted[Math.min(base + 1, sorted.length - 1)];
+    return sorted[base] + ((next - sorted[base]) * rest);
+  };
+  return {
+    n,
+    mean: summary.sum / n,
+    min: summary.min,
+    q1: quantile(0.25),
+    median: quantile(0.5),
+    q3: quantile(0.75),
+    max: summary.max
+  };
+}
+
+function buildDerivedScaleResult(values, scoreRange) {
+  const stats = getScaleValueStats(values);
+  return {
+    values,
+    n: stats.n,
+    mean: stats.mean,
+    min: stats.min,
+    q1: stats.q1,
+    median: stats.median,
+    q3: stats.q3,
+    max: stats.max,
+    scoreRange
+  };
+}
+
 function aggregateScale(targetLabel, criterionLabel, rows) {
   const entry = resultState.codebookByLabel.get(targetLabel);
   if (!entry) return null;
@@ -4245,6 +5186,86 @@ function aggregateScale(targetLabel, criterionLabel, rows) {
   if (tIdx === undefined) return null;
 
   const scoreRange = getScaleScoreRange(entry);
+  const isDerived = isDerivedScaleEntry(entry);
+  if (isDerived) {
+    const maxScore = scoreRange.length;
+    const values = [];
+
+    rows.forEach(row => {
+      const raw = cleanCell((row || [])[tIdx]);
+      if (!raw) return;
+      const value = Number(raw);
+      if (!Number.isFinite(value)) return;
+      if (value < 1 || value > maxScore) return;
+      values.push(value);
+    });
+
+    const overall = buildDerivedScaleResult(values, scoreRange);
+    let groupResults = null;
+    if (criterionLabel) {
+      const critEntry = getCriterionEntry(criterionLabel);
+      const cIdx = filterState.headerMap.get(criterionLabel);
+      if (critEntry && cIdx !== undefined) {
+        const groupOrder = [...critEntry.options];
+        const groupSet = new Set(groupOrder);
+        const byGroup = new Map();
+        groupOrder.forEach(groupValue => byGroup.set(groupValue, []));
+
+        rows.forEach(row => {
+          const groupValue = cleanCell((row || [])[cIdx]);
+          const raw = cleanCell((row || [])[tIdx]);
+          if (!groupValue || !raw) return;
+          const value = Number(raw);
+          if (!Number.isFinite(value)) return;
+          if (value < 1 || value > maxScore) return;
+
+          if (!groupSet.has(groupValue)) {
+            groupSet.add(groupValue);
+            groupOrder.push(groupValue);
+            byGroup.set(groupValue, []);
+          }
+          byGroup.get(groupValue).push(value);
+        });
+
+        groupResults = groupOrder.map(groupValue => {
+          const groupValues = byGroup.get(groupValue) || [];
+          const result = buildDerivedScaleResult(groupValues, scoreRange);
+          return {
+            value: groupValue,
+            label: `${critEntry.label}: ${groupValue}`,
+            n: result.n,
+            mean: result.mean,
+            min: result.min,
+            q1: result.q1,
+            median: result.median,
+            q3: result.q3,
+            max: result.max,
+            values: result.values
+          };
+        });
+      }
+    }
+
+    return {
+      targetLabel,
+      codebookEntry: entry,
+      totalN: overall.n,
+      mean: overall.mean,
+      min: overall.min,
+      q1: overall.q1,
+      median: overall.median,
+      q3: overall.q3,
+      max: overall.max,
+      values: overall.values,
+      scoreRange,
+      scoreResults: [],
+      visualType: 'scale',
+      isDerivedScale: true,
+      criterionLabel: groupResults ? criterionLabel : null,
+      groupResults
+    };
+  }
+
   const scoreCounts = Object.fromEntries(scoreRange.map(score => [score, 0]));
   let totalN = 0;
   let totalSum = 0;
@@ -4728,18 +5749,22 @@ function isScaleMidpointHidden(targetLabel) {
 }
 
 function buildScaleToggleHtml(targetLabel, activeMode, options = {}) {
-  const { showMidpointOption = false, hideMidpoint = false } = options;
+  const { showMidpointOption = false, hideMidpoint = false, disabledModes = [] } = options;
   const buttons = [
     { mode: 'distribution', label: '분포 보기' },
     { mode: 'mean', label: '평균 보기' }
-  ].map(item => `
+  ].map(item => {
+    const disabled = disabledModes.includes(item.mode);
+    return `
     <button type="button"
             class="result-view-btn ${activeMode === item.mode ? 'active' : ''}"
             data-scale-mode="${item.mode}"
-            data-target="${escapeHtml(targetLabel)}">
+            data-target="${escapeHtml(targetLabel)}"
+            ${disabled ? 'aria-disabled="true" data-scale-mode-disabled="true"' : ''}>
       ${escapeHtml(item.label)}
     </button>
-  `).join('');
+  `;
+  }).join('');
   const midpointOption = showMidpointOption ? `
     <label class="scale-view-option">
       <input type="checkbox" data-scale-hide-midpoint="true" data-target="${escapeHtml(targetLabel)}" ${hideMidpoint ? 'checked' : ''}>
@@ -4775,10 +5800,10 @@ function buildScaleAxisHtml(maxScore, options = {}) {
 function buildScaleMeanHtml(mean, maxScore, tipData, options = {}) {
   const { centered = false } = options;
   if (!Number.isFinite(mean) || mean <= 0) return '<div class="scale-mean-row"></div>';
-  const left = maxScore <= 1 ? 50 : ((mean - 1) / (maxScore - 1)) * 100;
+  const left = getScaleMeanLeftPct(mean, maxScore);
   return `
     <div class="scale-mean-row ${centered ? 'centered' : ''}">
-      <div class="scale-mean ${centered ? 'centered' : ''}" style="left:${Math.max(0, Math.min(100, left))}%;" data-tip="${encodeURIComponent(JSON.stringify(tipData))}">
+      <div class="scale-mean ${centered ? 'centered' : ''}" style="left:${left}%;" data-tip="${encodeURIComponent(JSON.stringify(tipData))}">
         <div class="scale-mean-label">평균</div>
         <div class="scale-mean-dot">${mean.toFixed(2)}</div>
       </div>
@@ -4805,7 +5830,7 @@ function getScaleDisplayResults(scoreResults, options = {}) {
 }
 
 function buildScaleTrackHtml(scoreResults, maxScore, options = {}) {
-  const { muted = false, showLabels = false, interactive = true, hideMidpoint = false } = options;
+  const { muted = false, interactive = true, hideMidpoint = false } = options;
   const displayResults = getScaleDisplayResults(scoreResults, { hideMidpoint });
   const segments = displayResults.map(result => {
     const width = Math.max(0, Math.min(100, result.displayPct || 0));
@@ -4819,9 +5844,7 @@ function buildScaleTrackHtml(scoreResults, maxScore, options = {}) {
     return `
       <div class="scale-segment"
            style="width:${width}%; background:${getScaleColor(result.score, maxScore)};"
-           ${interactive ? `data-tip="${tip}"` : ''}>
-        ${showLabels && width >= 8 ? `<span class="scale-segment-label ${isScaleDarkLabel(result.score, maxScore) ? 'is-dark' : ''}">${result.score}</span>` : ''}
-      </div>
+           ${interactive ? `data-tip="${tip}"` : ''}></div>
     `;
   }).join('');
   return `
@@ -4831,12 +5854,12 @@ function buildScaleTrackHtml(scoreResults, maxScore, options = {}) {
   `;
 }
 
-function buildScaleDistributionSummaryHtml(scoreResults, options = {}) {
+function buildScaleDistributionSummaryHtml(scoreResults) {
   const summary = getScalePolaritySummary(scoreResults);
   return `
     <div class="scale-summary">
-      <div class="scale-summary-item"><span class="label">부정응답 합계</span><span class="value">${formatPercent(summary.negativePct)}</span></div>
-      <div class="scale-summary-item is-positive"><span class="label">긍정응답 합계</span><span class="value">${formatPercent(summary.positivePct)}</span></div>
+      <div class="scale-summary-item"><span class="label">하위 척도 응답 합계</span><span class="value">${formatPercent(summary.negativePct)}</span></div>
+      <div class="scale-summary-item is-positive"><span class="label">상위 척도 응답 합계</span><span class="value">${formatPercent(summary.positivePct)}</span></div>
     </div>
   `;
 }
@@ -4846,7 +5869,7 @@ function buildScaleDistributionBarHtml(scoreResults, maxScore, options = {}) {
   return `
     <div class="scale-bar-wrap">
       ${buildScaleTrackHtml(scoreResults, maxScore, { hideMidpoint })}
-      ${buildScaleDistributionSummaryHtml(scoreResults, { hideMidpoint })}
+      ${buildScaleDistributionSummaryHtml(scoreResults)}
     </div>
   `;
 }
@@ -4864,6 +5887,121 @@ function buildScaleMeanOnlyHtml(mean, maxScore, meanTipData, scoreResults, optio
   `;
 }
 
+function buildDerivedScaleBins(values, maxScore) {
+  const binCount = 37;
+  const minScore = 1;
+  const safeMax = Number.isFinite(maxScore) && maxScore > minScore ? maxScore : 7;
+  const counts = Array.from({ length: binCount }, () => 0);
+  const nums = (Array.isArray(values) ? values : []).filter(Number.isFinite);
+  nums.forEach(value => {
+    if (value < minScore || value > safeMax) return;
+    const idx = Math.max(0, Math.min(binCount - 1, Math.round(((value - minScore) / (safeMax - minScore)) * (binCount - 1))));
+    counts[idx] += 1;
+  });
+  let smooth = counts;
+  for (let pass = 0; pass < 2; pass++) {
+    smooth = smooth.map((count, idx) => {
+      const prev = smooth[Math.max(0, idx - 1)];
+      const next = smooth[Math.min(smooth.length - 1, idx + 1)];
+      return (prev + (count * 2) + next) / 4;
+    });
+  }
+  const maxDensity = Math.max(...smooth, 0);
+  return smooth.map((density, idx) => ({
+    x: binCount === 1 ? 50 : (idx / (binCount - 1)) * 100,
+    density,
+    width: maxDensity > 0 ? (density / maxDensity) * 28 : 0
+  }));
+}
+
+function buildDerivedScaleViolinPath(values, maxScore) {
+  const bins = buildDerivedScaleBins(values, maxScore);
+  if (!bins.some(bin => bin.density > 0)) return '';
+  const centerY = 42;
+  const topPoints = bins.map(bin => `${bin.x.toFixed(2)},${(centerY - bin.width).toFixed(2)}`);
+  const bottomPoints = [...bins].reverse().map(bin => `${bin.x.toFixed(2)},${(centerY + bin.width).toFixed(2)}`);
+  return `M ${topPoints.join(' L ')} L ${bottomPoints.join(' L ')} Z`;
+}
+
+function buildDerivedScaleQuartileMarkersHtml(data, maxScore, options = {}) {
+  const { muted = false } = options;
+  const items = [
+    { key: 'q1', label: 'Q1', fullLabel: 'Q1(하위 25%)', value: data.q1 },
+    { key: 'median', label: 'Q2', fullLabel: 'Q2(중앙값)', value: data.median },
+    { key: 'q3', label: 'Q3', fullLabel: 'Q3(상위 25%)', value: data.q3 }
+  ];
+  return items.map(item => {
+    const left = getScaleMeanLeftPct(item.value, maxScore);
+    if (left === null) return '';
+    const tip = encodeURIComponent(JSON.stringify({
+      kind: 'derived-scale-quartile',
+      label: item.fullLabel,
+      value: item.value
+    }));
+    return `
+      <div class="derived-scale-quartile ${muted ? 'is-muted' : ''}"
+           style="left:${left}%;"
+           data-label="${item.label}"
+           data-tip="${tip}"></div>
+    `;
+  }).join('');
+}
+
+function buildDerivedScaleViolinHtml(data, viewMode) {
+  const maxScore = data.scoreRange.length;
+  const path = buildDerivedScaleViolinPath(data.values, maxScore);
+  const meanLeft = getScaleMeanLeftPct(data.mean, maxScore);
+  const muted = viewMode === 'mean';
+  const showMeanMarker = viewMode === 'mean';
+  const gradientId = `derived-scale-gradient-${Math.random().toString(36).slice(2, 10)}`;
+  const meanTip = encodeURIComponent(JSON.stringify({
+    kind: 'scale-mean',
+    mean: data.mean,
+    totalN: data.totalN
+  }));
+  const violinTip = encodeURIComponent(JSON.stringify({
+    kind: 'derived-scale-violin',
+    totalN: data.totalN,
+    min: data.min,
+    max: data.max
+  }));
+  return `
+    <div class="derived-scale-chart">
+      <div class="derived-scale-violin-wrap" data-tip="${violinTip}">
+        <svg class="derived-scale-violin" viewBox="0 0 100 84" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
+              ${SCALE_DIVERGING_PALETTE.map((color, idx) => {
+                const offset = SCALE_DIVERGING_PALETTE.length === 1 ? 0 : (idx / (SCALE_DIVERGING_PALETTE.length - 1)) * 100;
+                return `<stop offset="${offset.toFixed(2)}%" stop-color="${color}"></stop>`;
+              }).join('')}
+            </linearGradient>
+          </defs>
+          <line class="derived-scale-centerline" x1="0" y1="42" x2="100" y2="42"></line>
+          ${path ? `<path class="derived-scale-violin-shape ${muted ? 'is-muted' : ''}" style="fill:url(#${gradientId});" d="${path}"></path>` : ''}
+        </svg>
+        ${buildScaleAxisHtml(maxScore, { centered: true, showLabels: true })}
+        ${buildDerivedScaleQuartileMarkersHtml(data, maxScore, { muted })}
+        ${!showMeanMarker || meanLeft === null ? '' : `
+          <div class="derived-scale-mean-marker" style="left:${meanLeft}%;" data-tip="${meanTip}">
+            <div class="derived-scale-mean-line"></div>
+            <div class="derived-scale-mean-label">평균</div>
+            <div class="derived-scale-mean-dot">${Number(data.mean || 0).toFixed(2)}</div>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function formatScaleScoreLabel(result) {
+  if (!result) return '';
+  const baseLabel = `${result.score}점`;
+  return result.label !== baseLabel
+    ? `${baseLabel} - ${escapeHtml(result.label)}`
+    : baseLabel;
+}
+
 function buildScaleLegendItemsHtml(data) {
   const maxScore = data.scoreRange.length;
   const items = data.scoreResults.map(result => `
@@ -4877,6 +6015,28 @@ function buildScaleLegendItemsHtml(data) {
   return `<div class="scale-score-legend">${items}</div>`;
 }
 
+function buildScaleLegendItemsByScoreRangeHtml(scoreRange) {
+  const scores = Array.isArray(scoreRange) ? scoreRange : [];
+  const maxScore = scores.length;
+  const items = scores.map(score => `
+    <div class="scale-score-item">
+      <span class="scale-score-swatch" style="background:${getScaleColor(score, maxScore)}"></span>
+      <div class="scale-score-copy">
+        <span class="scale-score-key">${score}점</span>
+      </div>
+    </div>
+  `).join('');
+  return `<div class="scale-score-legend">${items}</div>`;
+}
+
+function buildScaleScoreOnlyLegendHtml(scoreRange) {
+  return `
+    <aside class="legend-panel">
+      ${buildScaleLegendItemsByScoreRangeHtml(scoreRange)}
+    </aside>
+  `;
+}
+
 function buildScaleLegendHtml(data) {
   return `
     <aside class="legend-panel">
@@ -4885,8 +6045,408 @@ function buildScaleLegendHtml(data) {
   `;
 }
 
-function buildScaleGroupLegendHtml(data) {
-  return buildScaleLegendHtml(data);
+function getScaleCompareCandidateEntries(targetLabel) {
+  const baseEntry = resultState.codebookByLabel.get(targetLabel);
+  if (!baseEntry || !isScaleChoiceType(baseEntry.type)) return [];
+  const targetValueCount = Number(baseEntry.valueCount);
+  const baseIsDerived = isDerivedScaleEntry(baseEntry);
+  return Array.from(resultState.codebookByLabel.values()).filter(entry => {
+    if (!entry || entry.label === targetLabel) return false;
+    if (!isScaleChoiceType(entry.type)) return false;
+    if (isDerivedScaleEntry(entry) !== baseIsDerived) return false;
+    if (!baseIsDerived && entry.role !== 'raw') return false;
+    return Number(entry.valueCount) === targetValueCount;
+  });
+}
+
+function getScaleCompareSelectedLabels(targetLabel) {
+  const allowed = new Set(getScaleCompareCandidateEntries(targetLabel).map(entry => entry.label));
+  const current = Array.isArray(resultState.scaleCompareSelections.get(targetLabel))
+    ? resultState.scaleCompareSelections.get(targetLabel)
+    : [];
+  const next = current.filter(label => allowed.has(label));
+  if (next.length !== current.length) {
+    if (next.length > 0) resultState.scaleCompareSelections.set(targetLabel, next);
+    else resultState.scaleCompareSelections.delete(targetLabel);
+  }
+  return next;
+}
+
+function aggregateTargetScaleCompareData(targetLabels, criterionLabel, rows) {
+  const compareLabels = getTargetScaleCompareLabels(targetLabels);
+  if (compareLabels.length < 2) return null;
+  const compared = compareLabels.map(label => aggregateScale(label, criterionLabel, rows))
+    .filter(item => item && item.visualType === 'scale');
+  if (compared.length < 2) return null;
+
+  const baseData = compared[0];
+  const questions = compared.map(item => ({
+    value: item.targetLabel,
+    label: item.targetLabel,
+    full: item.codebookEntry && item.codebookEntry.full ? item.codebookEntry.full : '',
+    mean: item.mean,
+    totalN: item.totalN,
+    data: item
+  }));
+
+  let groups = null;
+  if (baseData.groupResults) {
+    const baseGroups = Array.isArray(baseData.groupResults) ? baseData.groupResults : [];
+    groups = baseGroups.map(group => {
+      const points = compared.map(item => {
+        const found = Array.isArray(item.groupResults)
+          ? item.groupResults.find(candidate => candidate.value === group.value)
+          : null;
+        return {
+          questionLabel: item.targetLabel,
+          mean: found ? found.mean : 0,
+          n: found ? found.n : 0
+        };
+      });
+      return {
+        value: group.value,
+        label: group.label,
+        color: getGroupColor(baseGroups, group.value),
+        points
+      };
+    }).filter(group => group.points.some(point => point.n > 0));
+  }
+
+  return {
+    targetLabel: baseData.targetLabel,
+    baseData,
+    maxScore: baseData.scoreRange.length,
+    criterionLabel: baseData.criterionLabel,
+    questions,
+    groups
+  };
+}
+
+function getDisplayScaleCompareGroups(groups, hiddenGroups) {
+  if (!Array.isArray(groups)) return [];
+  return groups.filter(group => {
+    if (hiddenGroups && hiddenGroups.has(group.value)) return false;
+    return Array.isArray(group.points) && group.points.some(point => point.n > 0);
+  });
+}
+
+function buildScaleCompareOverallDotHtml(question, maxScore, compact = false) {
+  const left = getScaleMeanLeftPct(question.mean, maxScore);
+  if (left === null) return '';
+  const tip = encodeURIComponent(JSON.stringify({
+    kind: 'scale-mean',
+    questionLabel: question.label,
+    groupLabel: '응답자 전체',
+    mean: question.mean,
+    totalN: question.totalN
+  }));
+  return `
+    <div class="scale-compare-dot is-overall ${compact ? 'is-compact' : ''}" style="left:${left}%;" data-tip="${tip}">
+      ${compact ? '' : `<span>${formatScaleCompareMean(question.mean)}</span>`}
+    </div>
+  `;
+}
+
+function buildScaleCompareGroupDotHtml(group, point, maxScore, withOverall, compact = false) {
+  if (!point || point.n <= 0) return '';
+  const left = getScaleMeanLeftPct(point.mean, maxScore);
+  if (left === null) return '';
+  const tip = encodeURIComponent(JSON.stringify({
+    kind: 'scale-compare-group-dot',
+    groupLabel: group.label,
+    questionLabel: point.questionLabel,
+    mean: point.mean,
+    totalN: point.n
+  }));
+  return `
+    <div class="scale-compare-dot is-group ${withOverall ? 'has-overall' : ''} ${compact ? 'is-compact' : ''}"
+         style="left:${left}%; background:${group.color};"
+         data-tip="${tip}">
+      ${compact ? '' : `<span>${formatScaleCompareMean(point.mean)}</span>`}
+    </div>
+  `;
+}
+
+function buildScaleCompareLegendHtml(groups, hiddenGroups = new Set(), targetLabel = '') {
+  if (!Array.isArray(groups) || groups.length === 0) return '';
+  const items = [
+    `<div class="scale-compare-legend-item"><span class="scale-compare-legend-dot is-overall"></span><span>응답자 전체 평균</span></div>`,
+    ...groups.map(group => {
+      const isHidden = hiddenGroups && hiddenGroups.has(group.value);
+      return `
+      <label class="scale-compare-legend-item ${isHidden ? 'disabled' : ''}" data-group="${escapeHtml(group.value)}">
+        <input type="checkbox"
+               data-scale-group-toggle="true"
+               data-target="${escapeHtml(targetLabel)}"
+               data-group="${escapeHtml(group.value)}"
+               ${isHidden ? '' : 'checked'}>
+        <span class="scale-compare-legend-dot" style="background:${group.color};"></span>
+        <span>${escapeHtml(group.label)}</span>
+      </label>
+    `;
+    })
+  ].join('');
+  return `
+    <aside class="legend-panel">
+      <div class="scale-compare-legend legend" data-target="${escapeHtml(targetLabel)}" data-mode="group">${items}</div>
+      <div class="legend-actions" data-target="${escapeHtml(targetLabel)}" data-mode="group">
+        <button type="button" class="legend-action-btn" data-legend-action="all-on">전체 선택</button>
+        <button type="button" class="legend-action-btn" data-legend-action="all-off">전체 해제</button>
+      </div>
+    </aside>
+  `;
+}
+
+function buildScaleCompareRowAxisHtml(maxScore, item = null) {
+  const safeMaxScore = Number.isFinite(Number(maxScore)) && Number(maxScore) >= 2 ? Math.round(Number(maxScore)) : 5;
+  return `
+    <div class="scale-compare-row-axis">
+      ${Array.from({ length: safeMaxScore }, (_, i) => {
+        const score = i + 1;
+        const left = i / (safeMaxScore - 1) * 100;
+        return `
+          <span class="scale-compare-row-axis-point" style="left:${left}%;"></span>
+          <span class="scale-compare-row-axis-label" style="left:${left}%;">
+            <span class="scale-compare-row-axis-score">${score}</span>
+          </span>
+        `;
+      }).join('')}
+      ${[0, safeMaxScore - 1].map((edgeIndex) => {
+        const score = edgeIndex + 1;
+        const isLeft = edgeIndex === 0;
+        const left = edgeIndex / (safeMaxScore - 1) * 100;
+        const edgeLabel = item && item.codebookEntry
+          ? getScaleScoreLabel(item.codebookEntry, score)
+          : String(score);
+        const label = edgeLabel && edgeLabel !== `${score}점` ? edgeLabel : '';
+        if (!label) return '';
+        return `<span class="scale-compare-row-axis-copy ${isLeft ? 'is-left' : 'is-right'}">${escapeHtml(label)}</span>`;
+      }).join('')}
+    </div>
+  `;
+}
+
+function buildScaleCompareQuestionLabelHtml(question) {
+  const tip = encodeURIComponent(JSON.stringify({
+    kind: 'question-full',
+    label: question.label,
+    full: question.full
+  }));
+  return `<div class="scale-compare-label" data-tip="${tip}">${escapeHtml(question.label)}</div>`;
+}
+
+function buildScaleCompareDistributionBackgroundHtml(item) {
+  if (!item) return '';
+  const hideMidpoint = isScaleMidpointHidden(TARGET_SCALE_COMPARE_VIEW_KEY);
+  if (item.isDerivedScale) {
+    const path = buildDerivedScaleViolinPath(item.values, item.scoreRange.length);
+    if (!path) return '';
+    const gradientId = `derived-scale-compare-bg-${Math.random().toString(36).slice(2, 10)}`;
+    return `
+      <div class="scale-compare-distribution-bg" aria-hidden="true">
+        <svg class="derived-scale-violin" viewBox="0 0 100 84" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
+              ${SCALE_DIVERGING_PALETTE.map((color, idx) => {
+                const offset = SCALE_DIVERGING_PALETTE.length === 1 ? 0 : (idx / (SCALE_DIVERGING_PALETTE.length - 1)) * 100;
+                return `<stop offset="${offset.toFixed(2)}%" stop-color="${color}"></stop>`;
+              }).join('')}
+            </linearGradient>
+          </defs>
+          <path class="derived-scale-violin-shape is-muted" style="fill:url(#${gradientId});" d="${path}"></path>
+        </svg>
+      </div>
+    `;
+  }
+  return `
+    <div class="scale-compare-distribution-bg" aria-hidden="true">
+      ${buildScaleTrackHtml(item.scoreResults, item.scoreRange.length, { muted: true, interactive: false, hideMidpoint })}
+    </div>
+  `;
+}
+
+function buildScaleCompareDistributionSectionHtml(compareData) {
+  if (!compareData) return '';
+  const scoreRange = compareData.baseData && Array.isArray(compareData.baseData.scoreRange)
+    ? compareData.baseData.scoreRange
+    : Array.from({ length: compareData.maxScore || 0 }, (_, i) => i + 1);
+  const visualClass = getResultVisualClass(true);
+  const rowsHtml = compareData.questions.map(question => {
+    const item = question.data;
+    if (!item) return '';
+    const hideMidpoint = isScaleMidpointHidden(TARGET_SCALE_COMPARE_VIEW_KEY);
+    const chartHtml = item.isDerivedScale
+      ? buildDerivedScaleViolinHtml(item, 'distribution')
+      : `<div class="scale-chart">${buildScaleDistributionBarHtml(item.scoreResults, item.scoreRange.length, { hideMidpoint })}</div>`;
+    return `
+      <div class="scale-compare-row scale-compare-distribution-row">
+        ${buildScaleCompareQuestionLabelHtml(question)}
+        <div class="scale-compare-distribution-cell">${chartHtml}</div>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="scale-compare-section is-flush">
+      <div class="${visualClass} scale-compare-card">
+        <div class="result-chart-col">
+          <div class="scale-compare-chart">${rowsHtml}</div>
+        </div>
+        ${buildScaleScoreOnlyLegendHtml(scoreRange)}
+      </div>
+    </div>
+  `;
+}
+
+function buildScaleCompareScoreHeaders(scoreRange) {
+  return (scoreRange || []).map(score => `
+    <th class="num group-head" colspan="2">${Number(score).toLocaleString()}점</th>
+  `).join('');
+}
+
+function buildScaleCompareScoreSubHeaders(scoreRange) {
+  return (scoreRange || []).map(() => `
+    <th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>
+  `).join('');
+}
+
+function buildScaleCompareScoreCells(scoreResults, scoreRange) {
+  const results = Array.isArray(scoreResults) ? scoreResults : [];
+  return (scoreRange || []).map(score => {
+    const result = results.find(item => Number(item.score) === Number(score));
+    if (!result) return '<td class="num group-col">-</td><td class="num">-</td>';
+    return `<td class="num group-col">${formatPercent(result.pct)}</td><td class="num">${Number(result.count || 0).toLocaleString()}</td>`;
+  }).join('');
+}
+
+function buildScaleCompareDataTableHtml(compareData, hiddenGroups = new Set()) {
+  if (!compareData || !Array.isArray(compareData.questions)) return '';
+  const hasGroups = !!compareData.criterionLabel;
+  const displayGroups = getDisplayScaleCompareGroups(compareData.groups, hiddenGroups);
+  if (hasGroups) {
+    const topRow = [
+      `<th rowspan="2">문항</th>`,
+      `<th colspan="2" class="group-head">응답자 전체</th>`,
+      ...displayGroups.map(group => `<th colspan="2" class="group-head">${escapeHtml(group.label)}</th>`)
+    ].join('');
+    const subRow = [
+      `<th class="num group-col">평균</th><th class="num">응답자 수 (명)</th>`,
+      ...displayGroups.map(() => `<th class="num group-col">평균</th><th class="num">응답자 수 (명)</th>`)
+    ].join('');
+    const bodyRows = compareData.questions.map((question, questionIndex) => {
+      const groupCells = displayGroups.map(group => {
+        const point = group.points[questionIndex] || { mean: 0, n: 0 };
+        return `<td class="num group-col mean-value">${Number(point.mean || 0).toFixed(2)}점</td><td class="num">${Number(point.n || 0).toLocaleString()}</td>`;
+      }).join('');
+      return `
+        <tr>
+          <td>${escapeHtml(question.label)}</td>
+          <td class="num group-col mean-value">${Number(question.mean || 0).toFixed(2)}점</td>
+          <td class="num">${Number(question.totalN || 0).toLocaleString()}</td>
+          ${groupCells}
+        </tr>
+      `;
+    }).join('');
+    return wrapResultTable(`
+      <table class="result-table">
+        <thead>
+          <tr>${topRow}</tr>
+          <tr>${subRow}</tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    `);
+  }
+
+  const scoreRange = compareData.baseData && Array.isArray(compareData.baseData.scoreRange)
+    ? compareData.baseData.scoreRange
+    : Array.from({ length: compareData.maxScore || 0 }, (_, i) => i + 1);
+  const bodyRows = compareData.questions.map(question => `
+    <tr>
+      <td>${escapeHtml(question.label)}</td>
+      <td class="num mean-value">${Number(question.mean || 0).toFixed(2)}점</td>
+      ${buildScaleCompareScoreCells(question.data && question.data.scoreResults, scoreRange)}
+      <td class="num">${Number(question.totalN || 0).toLocaleString()}</td>
+    </tr>
+  `).join('');
+  const tableHtml = `
+    <table class="result-table">
+      <thead>
+        <tr>
+          <th rowspan="2">문항</th>
+          <th rowspan="2" class="num">평균</th>
+          ${buildScaleCompareScoreHeaders(scoreRange)}
+          <th rowspan="2" class="num">응답자 수 (명)</th>
+        </tr>
+        <tr>
+          ${buildScaleCompareScoreSubHeaders(scoreRange)}
+        </tr>
+      </thead>
+      <tbody>${bodyRows}</tbody>
+    </table>
+  `;
+  return wrapResultTable(tableHtml);
+}
+
+function buildScaleCompareSectionHtml(compareData, hiddenGroups, options = {}) {
+  if (!compareData) return '';
+  const { showHeader = true, flush = false } = options;
+  const visibleGroups = getDisplayScaleCompareGroups(compareData.groups, hiddenGroups);
+  const hasGroups = visibleGroups.length > 0;
+  const hasLegendGroups = Array.isArray(compareData.groups) && compareData.groups.length > 0;
+  const compactMarkers = hasGroups;
+  const rowHtml = compareData.questions.map((question, questionIndex) => {
+    const overallDotHtml = buildScaleCompareOverallDotHtml(question, compareData.maxScore, compactMarkers);
+    const groupDotHtml = hasGroups
+      ? visibleGroups.map(group => buildScaleCompareGroupDotHtml(group, group.points[questionIndex], compareData.maxScore, !!overallDotHtml, compactMarkers)).join('')
+      : '';
+    return `
+      <div class="scale-compare-row">
+        ${buildScaleCompareQuestionLabelHtml(question)}
+        <div class="scale-compare-plot">
+          <div class="scale-compare-track"></div>
+          ${buildScaleCompareDistributionBackgroundHtml(question.data)}
+          ${buildScaleCompareRowAxisHtml(compareData.maxScore, question.data)}
+          ${overallDotHtml}
+          ${groupDotHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+  const linePaths = hasGroups
+    ? [
+      `<path class="scale-compare-line is-overall"
+            data-means="${compareData.questions.map(question => (question.totalN > 0 && Number.isFinite(question.mean) ? question.mean.toFixed(4) : '')).join('|')}"></path>`,
+      ...visibleGroups.map(group => `
+      <path class="scale-compare-line"
+            stroke="${group.color}"
+            data-means="${group.points.map(point => (point && point.n > 0 && Number.isFinite(point.mean) ? point.mean.toFixed(4) : '')).join('|')}"></path>
+    `)
+    ].join('')
+    : '';
+  const chartHtml = `
+    <div class="scale-compare-chart ${hasGroups ? 'is-group' : ''}" data-scale-compare-chart="true" data-max-score="${compareData.maxScore}">
+      <div class="scale-compare-rows-wrap">
+        ${hasGroups ? `<div class="scale-compare-overlay"><svg class="scale-compare-line-svg">${linePaths}</svg></div>` : ''}
+        ${rowHtml}
+      </div>
+    </div>
+  `;
+  const visualClass = getResultVisualClass(hasLegendGroups);
+  const legendHtml = hasLegendGroups ? buildScaleCompareLegendHtml(compareData.groups, hiddenGroups, compareData.targetLabel) : '';
+  return `
+    <div class="scale-compare-section ${flush ? 'is-flush' : ''}">
+      ${showHeader ? `<div class="scale-compare-header">
+        <div class="scale-compare-title">다중 문항 비교</div>
+        <div class="scale-compare-sub">
+          ${hasGroups ? '연한 회색 점은 전체 평균이고, 그룹 점은 같은 그룹끼리 점선으로 연결됩니다.' : '선택한 문항들의 평균값을 한 화면에서 비교합니다.'}
+        </div>
+      </div>` : ''}
+      <div class="${visualClass} scale-compare-card">
+        <div class="result-chart-col">${chartHtml}</div>
+        ${legendHtml}
+      </div>
+    </div>
+  `;
 }
 
 function buildScaleGroupControlsHtml(data, hiddenGroups) {
@@ -4915,33 +6475,67 @@ function buildScaleGroupControlsHtml(data, hiddenGroups) {
   `;
 }
 
+function buildScaleGroupRowHtml(group, maxScore, viewMode, hideMidpoint) {
+  const meanTip = {
+    kind: 'scale-mean',
+    mean: group.mean,
+    totalN: group.n,
+    groupLabel: group.label
+  };
+  const chartHtml = viewMode === 'mean'
+    ? buildScaleMeanOnlyHtml(group.mean, maxScore, meanTip, group.scoreResults, { hideMidpoint })
+    : buildScaleDistributionBarHtml(group.scoreResults, maxScore, { hideMidpoint });
+  return `
+    <div class="scale-group-row">
+      <div class="scale-group-label">
+        <strong>${escapeHtml(group.label)}</strong>
+      </div>
+      <div class="scale-group-chart-cell">
+        ${chartHtml}
+      </div>
+    </div>
+  `;
+}
+
+function buildDerivedScaleGroupRowHtml(group, scoreRange, viewMode) {
+  const chartData = {
+    values: group.values || [],
+    totalN: group.n,
+    n: group.n,
+    mean: group.mean,
+    min: group.min,
+    q1: group.q1,
+    median: group.median,
+    q3: group.q3,
+    max: group.max,
+    scoreRange
+  };
+  return `
+    <div class="scale-group-row">
+      <div class="scale-group-label">
+        <strong>${escapeHtml(group.label)}</strong>
+      </div>
+      <div class="scale-group-chart-cell">
+        ${buildDerivedScaleViolinHtml(chartData, viewMode)}
+      </div>
+    </div>
+  `;
+}
+
 function buildScaleGroupChartHtml(data, hiddenGroups, viewMode) {
   const displayGroups = getDisplayGroupResults(data.groupResults, hiddenGroups);
   const maxScore = data.scoreRange.length;
   const hideMidpoint = isScaleMidpointHidden(data.targetLabel);
+  if (data.isDerivedScale) {
+    return `
+      <div class="scale-group-chart">
+        ${displayGroups.length === 0 ? '<div class="result-empty">표시할 그룹이 없습니다.</div>' : displayGroups.map(group => buildDerivedScaleGroupRowHtml(group, data.scoreRange, viewMode)).join('')}
+      </div>
+    `;
+  }
   return `
     <div class="scale-group-chart">
-      ${displayGroups.length === 0 ? '<div class="result-empty">표시할 그룹이 없습니다.</div>' : displayGroups.map(group => {
-        const meanTip = {
-          kind: 'scale-mean',
-          mean: group.mean,
-          totalN: group.n,
-          groupLabel: group.label
-        };
-        const chartHtml = viewMode === 'mean'
-          ? buildScaleMeanOnlyHtml(group.mean, maxScore, meanTip, group.scoreResults, { hideMidpoint })
-          : buildScaleDistributionBarHtml(group.scoreResults, maxScore, { hideMidpoint });
-        return `
-          <div class="scale-group-row">
-            <div class="scale-group-label">
-              <strong>${escapeHtml(group.label)}</strong>
-            </div>
-            <div class="scale-group-chart-cell">
-              ${chartHtml}
-            </div>
-          </div>
-        `;
-      }).join('')}
+      ${displayGroups.length === 0 ? '<div class="result-empty">표시할 그룹이 없습니다.</div>' : displayGroups.map(group => buildScaleGroupRowHtml(group, maxScore, viewMode, hideMidpoint)).join('')}
     </div>
   `;
 }
@@ -4950,6 +6544,7 @@ function buildScaleChartHtml(data, hiddenGroups, viewMode) {
   const maxScore = data.scoreRange.length;
   const hideMidpoint = isScaleMidpointHidden(data.targetLabel);
   if (data.groupResults) return buildScaleGroupChartHtml(data, hiddenGroups, viewMode);
+  if (data.isDerivedScale) return buildDerivedScaleViolinHtml(data, viewMode);
   const meanTip = {
     kind: 'scale-mean',
     mean: data.mean,
@@ -4961,11 +6556,100 @@ function buildScaleChartHtml(data, hiddenGroups, viewMode) {
   return `<div class="scale-chart">${chartHtml}</div>`;
 }
 
+function buildDerivedScaleDataTableHtml(data, hiddenGroups = new Set()) {
+  if (!data.groupResults) {
+    const tableHtml = `
+      <table class="result-table derived-scale-table">
+        <thead>
+          <tr>
+            <th>구분</th>
+            <th class="num metric">평균</th>
+            <th class="num metric">최소</th>
+            <th class="num metric">Q1(하위 25%)</th>
+            <th class="num metric">Q2(중앙값)</th>
+            <th class="num metric">Q3(상위 25%)</th>
+            <th class="num metric">최대</th>
+            <th class="num respondents">응답자 수 (명)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="total-row">
+            <td>응답자 전체</td>
+            <td class="num metric mean-value">${data.mean.toFixed(2)}점</td>
+            <td class="num metric">${data.min.toFixed(2)}</td>
+            <td class="num metric">${data.q1.toFixed(2)}</td>
+            <td class="num metric">${data.median.toFixed(2)}</td>
+            <td class="num metric">${data.q3.toFixed(2)}</td>
+            <td class="num metric">${data.max.toFixed(2)}</td>
+            <td class="num respondents">${data.totalN.toLocaleString()}</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    return wrapResultTable(tableHtml);
+  }
+
+  const displayGroups = getDisplayGroupResults(data.groupResults, hiddenGroups);
+  const rowsHtml = [
+    {
+      label: '응답자 전체',
+      n: data.totalN,
+      mean: data.mean,
+      min: data.min,
+      q1: data.q1,
+      median: data.median,
+      q3: data.q3,
+      max: data.max,
+      total: true
+    },
+    ...displayGroups.map(group => ({
+      label: group.label,
+      n: group.n,
+      mean: group.mean,
+      min: group.min,
+      q1: group.q1,
+      median: group.median,
+      q3: group.q3,
+      max: group.max
+    }))
+  ].map(row => `
+    <tr class="${row.total ? 'total-row' : ''}">
+      <td>${escapeHtml(row.label)}</td>
+      <td class="num metric mean-value">${Number(row.mean || 0).toFixed(2)}점</td>
+      <td class="num metric">${Number(row.min || 0).toFixed(2)}</td>
+      <td class="num metric">${Number(row.q1 || 0).toFixed(2)}</td>
+      <td class="num metric">${Number(row.median || 0).toFixed(2)}</td>
+      <td class="num metric">${Number(row.q3 || 0).toFixed(2)}</td>
+      <td class="num metric">${Number(row.max || 0).toFixed(2)}</td>
+      <td class="num respondents">${Number(row.n || 0).toLocaleString()}</td>
+    </tr>
+  `).join('');
+  const tableHtml = `
+    <table class="result-table derived-scale-table">
+      <thead>
+        <tr>
+          <th>구분</th>
+          <th class="num metric">평균</th>
+          <th class="num metric">최소</th>
+          <th class="num metric">Q1(하위 25%)</th>
+          <th class="num metric">Q2(중앙값)</th>
+          <th class="num metric">Q3(상위 25%)</th>
+          <th class="num metric">최대</th>
+          <th class="num respondents">응답자 수 (명)</th>
+        </tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  `;
+  return wrapResultTable(tableHtml);
+}
+
 function buildScaleDataTableHtml(data, hiddenGroups = new Set()) {
+  if (data.isDerivedScale) return buildDerivedScaleDataTableHtml(data, hiddenGroups);
   if (!data.groupResults) {
     const rowsHtml = data.scoreResults.map(result => `
       <tr>
-        <td>${result.score}점${result.label !== `${result.score}점` ? ` - ${escapeHtml(result.label)}` : ''}</td>
+        <td>${formatScaleScoreLabel(result)}</td>
         <td class="num">${formatPercent(result.pct)}</td>
         <td class="num">${result.count.toLocaleString()}</td>
         <td class="num">-</td>
@@ -5005,14 +6689,14 @@ function buildScaleDataTableHtml(data, hiddenGroups = new Set()) {
     `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th><th class="num">평균</th>`,
     ...displayGroups.map(() => `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th><th class="num">평균</th>`)
   ].join('');
-  const bodyRows = data.scoreResults.map(result => {
-    const groupCells = displayGroups.map(group => {
-      const groupResult = group.scoreResults.find(item => item.score === result.score) || { pct: 0, count: 0 };
-      return `<td class="num group-col">${formatPercent(groupResult.pct)}</td><td class="num">${groupResult.count.toLocaleString()}</td><td class="num">-</td>`;
-    }).join('');
-    return `
-      <tr>
-        <td>${result.score}점${result.label !== `${result.score}점` ? ` - ${escapeHtml(result.label)}` : ''}</td>
+    const bodyRows = data.scoreResults.map(result => {
+      const groupCells = displayGroups.map(group => {
+        const groupResult = group.scoreResults.find(item => item.score === result.score) || { pct: 0, count: 0 };
+        return `<td class="num group-col">${formatPercent(groupResult.pct)}</td><td class="num">${groupResult.count.toLocaleString()}</td><td class="num">-</td>`;
+      }).join('');
+      return `
+        <tr>
+        <td>${formatScaleScoreLabel(result)}</td>
         <td class="num group-col">${formatPercent(result.pct)}</td>
         <td class="num">${result.count.toLocaleString()}</td>
         <td class="num">-</td>
@@ -5498,7 +7182,7 @@ function buildRankDataTableHtml(data, hiddenGroups = new Set()) {
     `;
     return wrapResultTable(
       tableHtml,
-      `<div class="result-table-note">가중 점수 = Σ(응답 건수 × (${data.rankCount}-i+1))</div>`
+      `<div class="result-table-note">가중 점수는 상위 순위에 더 큰 가중치를 주는 방식으로 계산합니다. 1순위 응답 건수에는 ${data.rankCount}점을, 2순위에는 ${Math.max(data.rankCount - 1, 0)}점을 부여하는 식으로 내려가며 합산합니다.</div>`
     );
   }
 
@@ -5583,7 +7267,7 @@ function buildRankDataTableHtml(data, hiddenGroups = new Set()) {
   `;
   return wrapResultTable(
     tableHtml,
-    `<div class="result-table-note">가중 점수 = Σ(응답 건수 × (${data.rankCount}-i+1))</div>`
+    `<div class="result-table-note">가중 점수는 상위 순위에 더 큰 가중치를 주는 방식으로 계산합니다. 1순위 응답 건수에는 ${data.rankCount}점을, 2순위에는 ${Math.max(data.rankCount - 1, 0)}점을 부여하는 식으로 내려가며 합산합니다.</div>`
   );
 }
 
@@ -5745,6 +7429,81 @@ function setupOtherResponseModal() {
   });
 }
 
+function openScaleCompareModal(targetLabel) {
+  const modal = document.getElementById('scale-compare-modal');
+  const titleEl = document.getElementById('scale-compare-modal-title');
+  const noteEl = document.getElementById('scale-compare-modal-note');
+  const listEl = document.getElementById('scale-compare-modal-list');
+  if (!modal || !titleEl || !noteEl || !listEl) return;
+
+  const candidates = getScaleCompareCandidateEntries(targetLabel);
+  if (candidates.length === 0) {
+    alert('같은 척도 길이의 비교 가능한 문항이 없습니다.');
+    return;
+  }
+
+  const selected = new Set(getScaleCompareSelectedLabels(targetLabel));
+  const baseEntry = resultState.codebookByLabel.get(targetLabel);
+  titleEl.textContent = `${targetLabel}와 묶어 볼 문항 선택`;
+  noteEl.textContent = `${baseEntry && baseEntry.valueCount ? `${baseEntry.valueCount}점 척도` : '같은 척도'} 문항만 선택할 수 있어요. 현재 문항은 기본으로 포함되며, 아래에서 추가할 문항만 고르면 됩니다.`;
+  listEl.innerHTML = candidates.length > 0
+    ? candidates.map(entry => `
+      <label class="scale-compare-modal-item">
+        <input type="checkbox" value="${escapeHtml(entry.label)}" ${selected.has(entry.label) ? 'checked' : ''}>
+        <span class="scale-compare-modal-copy">
+          <span class="scale-compare-modal-label">${escapeHtml(entry.label)}</span>
+          ${entry.full ? `<span class="scale-compare-modal-full">${escapeHtml(entry.full)}</span>` : ''}
+        </span>
+      </label>
+    `).join('')
+    : '<div class="scale-compare-modal-empty">선택 가능한 문항이 없습니다.</div>';
+  modal.dataset.target = targetLabel;
+  modal.classList.add('show');
+}
+
+function closeScaleCompareModal() {
+  const modal = document.getElementById('scale-compare-modal');
+  const listEl = document.getElementById('scale-compare-modal-list');
+  if (listEl) listEl.innerHTML = '';
+  if (!modal) return;
+  modal.dataset.target = '';
+  modal.classList.remove('show');
+}
+
+function applyScaleCompareModalSelection() {
+  const modal = document.getElementById('scale-compare-modal');
+  const listEl = document.getElementById('scale-compare-modal-list');
+  const targetLabel = modal ? cleanCell(modal.dataset.target) : '';
+  if (!targetLabel || !listEl) return;
+  const selectedLabels = Array.from(listEl.querySelectorAll('input[type="checkbox"]:checked'))
+    .map(input => cleanCell(input.value))
+    .filter(Boolean);
+  if (selectedLabels.length > 0) resultState.scaleCompareSelections.set(targetLabel, selectedLabels);
+  else resultState.scaleCompareSelections.delete(targetLabel);
+  closeScaleCompareModal();
+  renderResults();
+}
+
+function setupScaleCompareModal() {
+  const modal = document.getElementById('scale-compare-modal');
+  const closeBtn = document.getElementById('close-scale-compare-btn');
+  const cancelBtn = document.getElementById('cancel-scale-compare-btn');
+  const applyBtn = document.getElementById('apply-scale-compare-btn');
+  if (!modal || !closeBtn || !cancelBtn || !applyBtn) return;
+
+  closeBtn.addEventListener('click', closeScaleCompareModal);
+  cancelBtn.addEventListener('click', closeScaleCompareModal);
+  applyBtn.addEventListener('click', applyScaleCompareModalSelection);
+  modal.addEventListener('click', e => {
+    if (e.target === modal) closeScaleCompareModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('show')) {
+      closeScaleCompareModal();
+    }
+  });
+}
+
 /* ---------- 섹션 dispatch ---------- */
 function buildChoiceSectionHtml(data, rows) {
   if (!data) return '';
@@ -5755,13 +7514,12 @@ function buildChoiceSectionHtml(data, rows) {
     : buildBasicChartHtml(data);
   const legendHtml = groupResults ? buildLegendHtml(data, hiddenGroups) : '';
   const tableHtml = buildDataTableHtml(data, hiddenGroups);
-  const otherHtml = buildOtherResponsesHtml(targetLabel, rows);
   const otherTexts = getOtherResponseTexts(targetLabel, rows);
   resultState.otherResponseTexts.set(targetLabel, otherTexts);
   const fullText = buildQuestionFullHtml(codebookEntry);
   const visualClass = getResultVisualClass(!!groupResults);
-  const noteHtml = data.isMulti
-    ? '<div class="result-note">복수응답 문항으로, 비율 합계는 100%를 초과할 수 있습니다.</div>'
+  const tableNoteHtml = data.isMulti
+    ? '<div class="result-table-note">복수응답 문항이므로 각 보기의 비율을 모두 더하면 100%를 초과할 수 있습니다.</div>'
     : '';
 
   return `
@@ -5769,30 +7527,31 @@ function buildChoiceSectionHtml(data, rows) {
       <div class="result-header">
         <div class="result-title">${escapeHtml(targetLabel)}</div>
         ${fullText}
-        ${noteHtml}
       </div>
       <div class="${visualClass}">
         <div class="result-chart-col">${chartHtml}</div>
         ${legendHtml}
       </div>
       ${tableHtml}
-      ${otherHtml}
+      ${tableNoteHtml}
     </section>
   `;
 }
 
-function buildScaleSection(data) {
+function buildScaleSection(data, rows) {
   if (!data) return '';
   const { codebookEntry, targetLabel, groupResults } = data;
   const hiddenGroups = resultState.hiddenGroupKeys.get(targetLabel) || new Set();
   const viewMode = getScaleViewMode(targetLabel);
   const hideMidpoint = isScaleMidpointHidden(targetLabel);
   const chartHtml = buildScaleChartHtml(data, hiddenGroups, viewMode);
-  const legendHtml = groupResults ? buildScaleGroupLegendHtml(data, hiddenGroups) : buildScaleLegendHtml(data);
+  const legendHtml = (!data.isDerivedScale && viewMode === 'distribution') ? buildScaleLegendHtml(data) : '';
   const tableHtml = buildDataTableHtml(data, hiddenGroups);
+  const compareTriggerHtml = '';
+  const compareSectionHtml = '';
   const fullText = buildQuestionFullHtml(codebookEntry);
   const toggleHtml = buildScaleToggleHtml(targetLabel, viewMode, {
-    showMidpointOption: canHideScaleMidpoint(data),
+    showMidpointOption: !data.isDerivedScale && canHideScaleMidpoint(data),
     hideMidpoint
   });
   const groupControlsHtml = groupResults ? buildScaleGroupControlsHtml(data, hiddenGroups) : '';
@@ -5810,6 +7569,39 @@ function buildScaleSection(data) {
         <div class="result-chart-col">${chartHtml}</div>
         ${legendHtml}
       </div>
+      ${tableHtml}
+      ${compareTriggerHtml}
+      ${compareSectionHtml}
+    </section>
+  `;
+}
+
+function buildTargetScaleCompareSection(compareData) {
+  if (!compareData || !compareData.baseData) return '';
+  const hiddenGroups = resultState.hiddenGroupKeys.get(compareData.targetLabel) || new Set();
+  const hasGroups = Array.isArray(compareData.groups) && compareData.groups.length > 0;
+  let viewMode = resultState.scaleViewModes.get(TARGET_SCALE_COMPARE_VIEW_KEY) || 'mean';
+  if (hasGroups && viewMode === 'distribution') {
+    viewMode = 'mean';
+    resultState.scaleViewModes.set(TARGET_SCALE_COMPARE_VIEW_KEY, 'mean');
+  }
+  const hideMidpoint = isScaleMidpointHidden(TARGET_SCALE_COMPARE_VIEW_KEY);
+  const toggleHtml = buildScaleToggleHtml(TARGET_SCALE_COMPARE_VIEW_KEY, viewMode, {
+    showMidpointOption: canHideScaleMidpoint(compareData.baseData),
+    hideMidpoint,
+    disabledModes: hasGroups ? ['distribution'] : []
+  });
+  const compareSectionHtml = viewMode === 'distribution'
+    ? buildScaleCompareDistributionSectionHtml(compareData)
+    : buildScaleCompareSectionHtml(compareData, hiddenGroups, { showHeader: false, flush: true });
+  const tableHtml = buildScaleCompareDataTableHtml(compareData, hiddenGroups);
+  return `
+    <section class="result-section" data-target="${escapeHtml(compareData.targetLabel)}" data-type="scale-compare">
+      <div class="result-header">
+        <div class="result-title">여러 문항 한 번에 비교하기</div>
+        ${toggleHtml}
+      </div>
+      ${compareSectionHtml}
       ${tableHtml}
     </section>
   `;
@@ -5863,6 +7655,7 @@ async function renderResults() {
   }
 
   await ensureCodebookIndexLoaded();
+  refreshTargetScaleCompareControl();
 
   if (!filterState.rows || filterState.rows.length < 2) {
     container.innerHTML = '<div class="result-empty">응답 데이터가 아직 준비되지 않아 결과를 표시할 수 없어요.</div>';
@@ -5871,6 +7664,18 @@ async function renderResults() {
 
   const criterionLabel = getCriterionChipLabel();
   const filteredRows = getFilteredLabelDataRows();
+
+  if (resultState.targetScaleCompareMode) {
+    const compareData = aggregateTargetScaleCompareData(targetLabels, criterionLabel, filteredRows);
+    if (compareData) {
+      container.innerHTML = buildTargetScaleCompareSection(compareData);
+      alignScaleCompareCharts(container);
+      attachResultEventListeners(container);
+      return;
+    }
+    resultState.targetScaleCompareMode = false;
+    refreshTargetScaleCompareControl();
+  }
 
   const sections = targetLabels.map(label => {
     const entry = resultState.codebookByLabel.get(label);
@@ -5883,6 +7688,7 @@ async function renderResults() {
 
   container.innerHTML = sections;
   alignGroupCompareCharts(container);
+  alignScaleCompareCharts(container);
   attachResultEventListeners(container);
 }
 
@@ -5937,6 +7743,57 @@ function alignGroupCompareCharts(container) {
   });
 }
 
+function alignScaleCompareCharts(container) {
+  if (!container) return;
+  container.querySelectorAll('.scale-compare-chart.is-group').forEach(chart => {
+    const overlay = chart.querySelector('.scale-compare-overlay');
+    const svg = chart.querySelector('.scale-compare-line-svg');
+    const plots = Array.from(chart.querySelectorAll('.scale-compare-plot'));
+    const maxScore = Number(chart.dataset.maxScore || 0);
+    if (!overlay || !svg || plots.length === 0 || !Number.isFinite(maxScore) || maxScore <= 1) return;
+
+    const overlayRect = overlay.getBoundingClientRect();
+    const width = overlay.clientWidth;
+    const height = overlay.clientHeight;
+    if (!width || !height) return;
+
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    svg.querySelectorAll('.scale-compare-line').forEach(path => {
+      const means = String(path.dataset.means || '').split('|').map(value => {
+        const trimmed = cleanCell(value);
+        return trimmed === '' ? NaN : Number(trimmed);
+      });
+      let started = false;
+      const commands = [];
+      means.forEach((mean, index) => {
+        if (!Number.isFinite(mean)) {
+          started = false;
+          return;
+        }
+        const plot = plots[index];
+        if (!plot) {
+          started = false;
+          return;
+        }
+        const rect = plot.getBoundingClientRect();
+        const leftPct = getScaleMeanLeftPct(mean, maxScore);
+        if (!Number.isFinite(leftPct)) {
+          started = false;
+          return;
+        }
+        const plotStyles = getComputedStyle(plot.parentElement || plot);
+        const trackTop = Number.parseFloat(plotStyles.getPropertyValue('--scale-compare-track-top')) || (rect.height * 0.46);
+        const x = (rect.left - overlayRect.left) + ((leftPct / 100) * rect.width);
+        const y = (rect.top - overlayRect.top) + trackTop;
+        commands.push(`${started ? 'L' : 'M'} ${x} ${y}`);
+        started = true;
+      });
+      path.setAttribute('d', commands.join(' '));
+    });
+  });
+}
+
 function attachResultEventListeners(container) {
   ensureTooltip();
   container.querySelectorAll('[data-tip]').forEach(el => {
@@ -5958,6 +7815,12 @@ function attachResultEventListeners(container) {
       const mode = btn.dataset.scaleMode;
       const targetLabel = btn.dataset.target;
       if (!mode || !targetLabel) return;
+      if (btn.dataset.scaleModeDisabled === 'true') {
+        if (targetLabel === TARGET_SCALE_COMPARE_VIEW_KEY && mode === 'distribution') {
+          alert('그룹별 비교 기준이 적용된 상태에서는 분포 보기를 사용할 수 없습니다. 분포 보기를 보려면 그룹별 비교 기준을 해제해 주세요.');
+        }
+        return;
+      }
       resultState.scaleViewModes.set(targetLabel, mode);
       renderResults();
     });
@@ -5984,10 +7847,19 @@ function attachResultEventListeners(container) {
       renderResults();
     });
   });
+  container.querySelectorAll('[data-open-scale-compare]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      const targetLabel = btn.dataset.openScaleCompare;
+      if (!targetLabel) return;
+      openScaleCompareModal(targetLabel);
+    });
+  });
   container.querySelectorAll('.legend').forEach(legend => {
     const targetLabel = legend.dataset.target;
     const mode = legend.dataset.mode; // 'group' or 'rank'
-    legend.querySelectorAll('.legend-item').forEach(item => {
+    legend.querySelectorAll('.legend-item, .scale-compare-legend-item').forEach(item => {
       const cb = item.querySelector('input[type="checkbox"]');
       if (!cb) return;
       cb.addEventListener('change', () => {
@@ -6025,7 +7897,7 @@ function attachResultEventListeners(container) {
         } else {
           const legend = actions.parentElement ? actions.parentElement.querySelector('.legend[data-mode="group"]') : null;
           const groupValues = legend
-            ? Array.from(legend.querySelectorAll('.legend-item')).map(item => item.dataset.group).filter(Boolean)
+            ? Array.from(legend.querySelectorAll('.legend-item, .scale-compare-legend-item')).map(item => item.dataset.group).filter(Boolean)
             : [];
           resultState.hiddenGroupKeys.set(targetLabel, action === 'all-off' ? new Set(groupValues) : new Set());
         }
@@ -6087,6 +7959,11 @@ function formatTooltipHtml(d) {
       return [
         line(escapeHtml(d.option))
       ].join('');
+    case 'question-full':
+      return [
+        line(escapeHtml(d.label || '')),
+        d.full ? line(`Q. ${escapeHtml(d.full)}`) : ''
+      ].join('');
     case 'basic-bar':
       return [
         line(escapeHtml(d.option)),
@@ -6135,9 +8012,29 @@ function formatTooltipHtml(d) {
       ].join('');
     case 'scale-mean':
       return [
+        d.questionLabel ? line(escapeHtml(d.questionLabel)) : '',
         d.groupLabel ? line(escapeHtml(d.groupLabel)) : '',
         line(`평균 ${Number(d.mean || 0).toFixed(2)}점`),
         line(n(d.totalN))
+      ].join('');
+    case 'derived-scale-violin':
+      return [
+        line(`연속값 분포`),
+        line(n(d.totalN)),
+        line(`최소 ${Number(d.min || 0).toFixed(2)}점`),
+        line(`최대 ${Number(d.max || 0).toFixed(2)}점`)
+      ].join('');
+    case 'derived-scale-quartile':
+      return [
+        line(escapeHtml(d.label)),
+        line(`${Number(d.value || 0).toFixed(2)}점`)
+      ].join('');
+    case 'scale-compare-group-dot':
+      return [
+        d.questionLabel ? line(escapeHtml(d.questionLabel)) : '',
+        line(escapeHtml(d.groupLabel)),
+        line(`평균 ${Number(d.mean || 0).toFixed(2)}점`),
+        d.totalN !== undefined ? line(n(d.totalN)) : ''
       ].join('');
     default:
       return '';
@@ -6194,13 +8091,18 @@ async function initResultFeature() {
   try { setupPanelToggle && setupPanelToggle(); } catch (_) {}
   try { setupSelectionAndDragDrop && setupSelectionAndDragDrop(); } catch (_) {}
   try { setupOtherResponseModal && setupOtherResponseModal(); } catch (_) {}
+  try { setupScaleCompareModal && setupScaleCompareModal(); } catch (_) {}
   try { setupTitleRename && setupTitleRename(); } catch (_) {}
   try { setupSavedModal && setupSavedModal(); } catch (_) {}
   try { await setupFilters(); } catch (_) {}
 
   hookFilterUpdates();
   observeDropZones();
-  window.addEventListener('resize', () => alignGroupCompareCharts(document.getElementById('result-container')));
+  window.addEventListener('resize', () => {
+    const container = document.getElementById('result-container');
+    alignGroupCompareCharts(container);
+    alignScaleCompareCharts(container);
+  });
   renderResults();
 }
 

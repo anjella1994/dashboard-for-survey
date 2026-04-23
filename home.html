@@ -924,6 +924,15 @@ function normalizeHeader(s) {
   return String(s || '').replace(/^\uFEFF/, '').trim().toLowerCase();
 }
 
+function isFreeTextHeaderName(headerName) {
+  const normalized = normalizeHeader(headerName);
+  return normalized.includes('기타_텍스트')
+    || normalized.includes('기타 텍스트')
+    || normalized.includes('other_text')
+    || normalized.endsWith('__기타')
+    || normalized.endsWith('__other');
+}
+
 function checkColumns(headerRow, required) {
   const headerSet = new Set(headerRow.map(normalizeHeader));
   const missing = required.filter(c => !headerSet.has(c.toLowerCase()));
@@ -941,6 +950,7 @@ function detectResponseType(rows) {
   const dataRows = rows.slice(1, 31);
   for (const r of dataRows) {
     for (let c = skipCols; c < (r || []).length; c++) {
+      if (isFreeTextHeaderName(header[c])) continue;
       const v = String(r[c] == null ? '' : r[c]).trim();
       if (v === '') continue;
       samples++;
