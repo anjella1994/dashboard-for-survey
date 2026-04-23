@@ -1956,7 +1956,7 @@
         <div class="zone-card">
           <div class="zone-header">
             <div class="zone-header-main">
-              <div class="zone-title">분석 대상 문항</div>
+              <div class="zone-title">보고 싶은 문항</div>
               <button type="button" id="target-clear-btn" class="zone-clear-btn">모두 삭제</button>
             </div>
             <div class="zone-limit"><span id="target-count">0</span> / 10</div>
@@ -1968,7 +1968,7 @@
         <div class="zone-card">
           <div class="zone-header">
             <div class="zone-header-main">
-              <div class="zone-title">분석 기준 문항</div>
+              <div class="zone-title">그룹별 비교</div>
               <button type="button" id="criterion-clear-btn" class="zone-clear-btn">삭제</button>
             </div>
             <div class="zone-limit"><span id="criterion-count">0</span> / 1</div>
@@ -1984,7 +1984,7 @@
 
       <div class="data-area">
         <div id="result-container" class="result-container">
-          <div class="result-empty">분석 대상 문항을 좌측에서 드래그해 주세요.</div>
+          <div class="result-empty">보고 싶은 문항을 좌측에서 드래그해 주세요.</div>
         </div>
       </div>
     </main>
@@ -2658,7 +2658,7 @@ function setupSelectionAndDragDrop() {
       if (items.length === 0) return;
 
       const limit = parseInt(zone.dataset.limit, 10) || 10;
-      const zoneName = zone.dataset.zone === 'target' ? '분석 대상' : '분석 기준';
+      const zoneName = zone.dataset.zone === 'target' ? '보고 싶은 문항' : '그룹별 비교';
       const existingLabels = new Set(
         Array.from(zone.querySelectorAll('.chip')).map(c => c.dataset.label)
       );
@@ -5136,7 +5136,7 @@ async function renderResults() {
 
   const targetLabels = getTargetChipLabels();
   if (targetLabels.length === 0) {
-    container.innerHTML = '<div class="result-empty">분석 대상 문항을 좌측에서 드래그해 주세요.</div>';
+    container.innerHTML = '<div class="result-empty">보고 싶은 문항을 좌측에서 드래그해 주세요.</div>';
     return;
   }
 
