@@ -1319,16 +1319,6 @@
   .scale-summary-item.is-positive {
     text-align: right;
   }
-  .scale-segment-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.92);
-    white-space: nowrap;
-    pointer-events: none;
-  }
-  .scale-segment-label.is-dark {
-    color: rgba(20,20,20,0.78);
-  }
   .scale-mean {
     position: absolute;
     top: 0;
@@ -1339,23 +1329,6 @@
     gap: 5px;
     pointer-events: auto;
     z-index: 2;
-  }
-  .scale-mean-value {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text);
-    background: #fff;
-    padding: 2px 7px;
-    border-radius: 999px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    white-space: nowrap;
-  }
-  .scale-mean-mark {
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-    border-top: 8px solid var(--text);
   }
   .scale-axis {
     height: 14px;
@@ -1535,10 +1508,6 @@
     color: var(--text);
     line-height: 1.35;
     word-break: keep-all;
-  }
-  .legend-panel-divider {
-    height: 1px;
-    background: var(--border-2);
   }
 
   .result-table-wrap {
@@ -3764,10 +3733,6 @@ function getScaleColor(score, maxScore) {
   const idx = Math.round(((score - 1) * (SCALE_DIVERGING_PALETTE.length - 1)) / (maxScore - 1));
   return SCALE_DIVERGING_PALETTE[Math.max(0, Math.min(SCALE_DIVERGING_PALETTE.length - 1, idx))];
 }
-function isScaleDarkLabel(score, maxScore) {
-  const mid = (maxScore + 1) / 2;
-  return Math.abs(score - mid) < 0.6;
-}
 
 const resultState = {
   codebookByLabel: new Map(),
@@ -4805,7 +4770,7 @@ function getScaleDisplayResults(scoreResults, options = {}) {
 }
 
 function buildScaleTrackHtml(scoreResults, maxScore, options = {}) {
-  const { muted = false, showLabels = false, interactive = true, hideMidpoint = false } = options;
+  const { muted = false, interactive = true, hideMidpoint = false } = options;
   const displayResults = getScaleDisplayResults(scoreResults, { hideMidpoint });
   const segments = displayResults.map(result => {
     const width = Math.max(0, Math.min(100, result.displayPct || 0));
@@ -4819,9 +4784,7 @@ function buildScaleTrackHtml(scoreResults, maxScore, options = {}) {
     return `
       <div class="scale-segment"
            style="width:${width}%; background:${getScaleColor(result.score, maxScore)};"
-           ${interactive ? `data-tip="${tip}"` : ''}>
-        ${showLabels && width >= 8 ? `<span class="scale-segment-label ${isScaleDarkLabel(result.score, maxScore) ? 'is-dark' : ''}">${result.score}</span>` : ''}
-      </div>
+           ${interactive ? `data-tip="${tip}"` : ''}></div>
     `;
   }).join('');
   return `
@@ -4831,7 +4794,7 @@ function buildScaleTrackHtml(scoreResults, maxScore, options = {}) {
   `;
 }
 
-function buildScaleDistributionSummaryHtml(scoreResults, options = {}) {
+function buildScaleDistributionSummaryHtml(scoreResults) {
   const summary = getScalePolaritySummary(scoreResults);
   return `
     <div class="scale-summary">
@@ -4846,7 +4809,7 @@ function buildScaleDistributionBarHtml(scoreResults, maxScore, options = {}) {
   return `
     <div class="scale-bar-wrap">
       ${buildScaleTrackHtml(scoreResults, maxScore, { hideMidpoint })}
-      ${buildScaleDistributionSummaryHtml(scoreResults, { hideMidpoint })}
+      ${buildScaleDistributionSummaryHtml(scoreResults)}
     </div>
   `;
 }
@@ -4883,10 +4846,6 @@ function buildScaleLegendHtml(data) {
       ${buildScaleLegendItemsHtml(data)}
     </aside>
   `;
-}
-
-function buildScaleGroupLegendHtml(data) {
-  return buildScaleLegendHtml(data);
 }
 
 function buildScaleGroupControlsHtml(data, hiddenGroups) {
@@ -5788,7 +5747,7 @@ function buildScaleSection(data) {
   const viewMode = getScaleViewMode(targetLabel);
   const hideMidpoint = isScaleMidpointHidden(targetLabel);
   const chartHtml = buildScaleChartHtml(data, hiddenGroups, viewMode);
-  const legendHtml = groupResults ? buildScaleGroupLegendHtml(data, hiddenGroups) : buildScaleLegendHtml(data);
+  const legendHtml = buildScaleLegendHtml(data);
   const tableHtml = buildDataTableHtml(data, hiddenGroups);
   const fullText = buildQuestionFullHtml(codebookEntry);
   const toggleHtml = buildScaleToggleHtml(targetLabel, viewMode, {
