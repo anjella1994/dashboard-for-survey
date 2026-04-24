@@ -1,4 +1,4 @@
-// 저장된 설문 대시보드 목록을 브라우저 저장소에서 읽고 쓰는 유틸리티입니다.
+﻿// 저장된 설문 대시보드 목록을 브라우저 저장소에서 읽고 쓰는 유틸리티입니다.
 const STORAGE_KEY = 'p6s.surveys';
 const FILE_DB_NAME = 'p6s.surveyFiles';
 const FILE_DB_VERSION = 1;
@@ -2510,6 +2510,32 @@ function getScaleValueStats(values) {
 
 function buildDerivedScaleResult(values, scoreRange) {
   const stats = getScaleValueStats(values);
+  const safeRange = Array.isArray(scoreRange) ? scoreRange : [];
+  const bucketCounts = Object.fromEntries(safeRange.map(score => [score, 0]));
+  (Array.isArray(values) ? values : []).forEach(value => {
+    const num = Number(value);
+    if (!Number.isFinite(num) || safeRange.length === 0) return;
+    let nearest = safeRange[0];
+    let minDistance = Math.abs(num - Number(nearest));
+    safeRange.forEach(score => {
+      const distance = Math.abs(num - Number(score));
+      if (distance < minDistance) {
+        nearest = score;
+        minDistance = distance;
+      }
+    });
+    bucketCounts[nearest] = Number(bucketCounts[nearest] || 0) + 1;
+  });
+  const totalN = Number(stats.n || 0);
+  const scoreResults = safeRange.map(score => {
+    const count = Number(bucketCounts[score] || 0);
+    return {
+      score,
+      label: String(score),
+      count,
+      pct: totalN > 0 ? (count / totalN) * 100 : 0
+    };
+  });
   return {
     values,
     n: stats.n,
@@ -2519,7 +2545,8 @@ function buildDerivedScaleResult(values, scoreRange) {
     median: stats.median,
     q3: stats.q3,
     max: stats.max,
-    scoreRange
+    scoreRange,
+    scoreResults
   };
 }
 
@@ -3329,7 +3356,7 @@ function buildChoiceDataTableHtml(data) {
             <tr>
               <th>응답 보기</th>
               <th class="num">비율(%)</th>
-              <th class="num">빈도수 (명)</th>
+              <th class="num">응답 수(명)</th>
             </tr>
           </thead>
           <tbody>
@@ -3360,8 +3387,8 @@ function buildChoiceDataTableHtml(data) {
     ...displayGroups.map(g => buildGroupedCountHeader(g.label, g.n, 2))
   ].join('');
   const topRow2 = [
-    `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>`,
-    ...displayGroups.map(() => `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>`)
+    `<th class="num group-col">비율(%)</th><th class="num">응답 수(명)</th>`,
+    ...displayGroups.map(() => `<th class="num group-col">비율(%)</th><th class="num">응답 수(명)</th>`)
   ].join('');
 
   const bodyRows = totalResults.map(r => {
@@ -3595,65 +3622,61 @@ function buildDerivedScaleViolinPath(values, maxScore) {
 }
 
 function buildDerivedScaleQuartileMarkersHtml(data, maxScore, options = {}) {
-  const { muted = false } = options;
+  const { muted = false, groupLabel = "" } = options;
   const items = [
-    { key: 'q1', label: 'Q1', fullLabel: 'Q1(하위 25%)', value: data.q1 },
-    { key: 'median', label: 'Q2', fullLabel: 'Q2(중앙값)', value: data.median },
-    { key: 'q3', label: 'Q3', fullLabel: 'Q3(상위 25%)', value: data.q3 }
+    { key: "q1", label: "Q1", fullLabel: "Q1(하위 25%)", value: data.q1 },
+    { key: "median", label: "Q2", fullLabel: "Q2(중앙값)", value: data.median },
+    { key: "q3", label: "Q3", fullLabel: "Q3(상위 25%)", value: data.q3 }
   ];
   return items.map(item => {
     const left = getScaleMeanLeftPct(item.value, maxScore);
-    if (left === null) return '';
+    if (left === null) return "";
     const tip = encodeURIComponent(JSON.stringify({
-      kind: 'derived-scale-quartile',
+      kind: "derived-scale-quartile",
+      groupLabel,
       label: item.fullLabel,
       value: item.value
     }));
     return `
-      <div class="derived-scale-quartile ${muted ? 'is-muted' : ''}"
+      <div class="derived-scale-quartile ${muted ? "is-muted" : ""}"
            style="left:${left}%;"
            data-label="${item.label}"
            data-tip="${tip}"></div>
     `;
-  }).join('');
+  }).join("");
 }
 
 function buildDerivedScaleViolinHtml(data, viewMode) {
   const maxScore = data.scoreRange.length;
   const path = buildDerivedScaleViolinPath(data.values, maxScore);
   const meanLeft = getScaleMeanLeftPct(data.mean, maxScore);
-  const muted = viewMode === 'mean';
-  const showMeanMarker = viewMode === 'mean';
+  const muted = viewMode === "mean";
+  const showMeanMarker = viewMode === "mean";
   const gradientId = `derived-scale-gradient-${Math.random().toString(36).slice(2, 10)}`;
   const meanTip = encodeURIComponent(JSON.stringify({
-    kind: 'scale-mean',
+    kind: "scale-mean",
     mean: data.mean,
-    totalN: data.totalN
-  }));
-  const violinTip = encodeURIComponent(JSON.stringify({
-    kind: 'derived-scale-violin',
     totalN: data.totalN,
-    min: data.min,
-    max: data.max
+    groupLabel: data.groupLabel || ""
   }));
   return `
     <div class="derived-scale-chart">
-      <div class="derived-scale-violin-wrap" data-tip="${violinTip}">
+      <div class="derived-scale-violin-wrap">
         <svg class="derived-scale-violin" viewBox="0 0 100 84" preserveAspectRatio="none" aria-hidden="true">
           <defs>
             <linearGradient id="${gradientId}" x1="0%" y1="0%" x2="100%" y2="0%">
               ${SCALE_DIVERGING_PALETTE.map((color, idx) => {
                 const offset = SCALE_DIVERGING_PALETTE.length === 1 ? 0 : (idx / (SCALE_DIVERGING_PALETTE.length - 1)) * 100;
                 return `<stop offset="${offset.toFixed(2)}%" stop-color="${color}"></stop>`;
-              }).join('')}
+              }).join("")}
             </linearGradient>
           </defs>
           <line class="derived-scale-centerline" x1="0" y1="42" x2="100" y2="42"></line>
-          ${path ? `<path class="derived-scale-violin-shape ${muted ? 'is-muted' : ''}" style="fill:url(#${gradientId});" d="${path}"></path>` : ''}
+          ${path ? `<path class="derived-scale-violin-shape ${muted ? "is-muted" : ""}" style="fill:url(#${gradientId});" d="${path}"></path>` : ""}
         </svg>
         ${buildScaleAxisHtml(maxScore, { centered: true, showLabels: true })}
-        ${buildDerivedScaleQuartileMarkersHtml(data, maxScore, { muted })}
-        ${!showMeanMarker || meanLeft === null ? '' : `
+        ${buildDerivedScaleQuartileMarkersHtml(data, maxScore, { muted, groupLabel: data.groupLabel || "" })}
+        ${!showMeanMarker || meanLeft === null ? "" : `
           <div class="derived-scale-mean-marker" style="left:${meanLeft}%;" data-tip="${meanTip}">
             <div class="derived-scale-mean-line"></div>
             <div class="derived-scale-mean-label">평균</div>
@@ -3971,13 +3994,13 @@ function buildScaleCompareDistributionSectionHtml(compareData) {
 function buildScaleCompareScoreHeaders(scoreRange) {
   return (scoreRange || []).map(score => `
     <th class="num group-head" colspan="2">${Number(score).toLocaleString()}점</th>
-  `).join('');
+  `).join("");
 }
 
 function buildScaleCompareScoreSubHeaders(scoreRange) {
   return (scoreRange || []).map(() => `
-    <th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>
-  `).join('');
+    <th class="num group-col">비율(%)</th><th class="num">응답 수(명)</th>
+  `).join("");
 }
 
 function buildScaleCompareScoreCells(scoreResults, scoreRange) {
@@ -3990,24 +4013,24 @@ function buildScaleCompareScoreCells(scoreResults, scoreRange) {
 }
 
 function buildScaleCompareDataTableHtml(compareData, hiddenGroups = new Set()) {
-  if (!compareData || !Array.isArray(compareData.questions)) return '';
+  if (!compareData || !Array.isArray(compareData.questions)) return "";
   const hasGroups = !!compareData.criterionLabel;
   const displayGroups = getDisplayScaleCompareGroups(compareData.groups, hiddenGroups);
   if (hasGroups) {
     const topRow = [
-      `<th rowspan="2">문항</th>`,
+      `<th rowspan="2">문항명</th>`,
       `<th colspan="2" class="group-head">응답자 전체</th>`,
       ...displayGroups.map(group => `<th colspan="2" class="group-head">${escapeHtml(group.label)}</th>`)
-    ].join('');
+    ].join("");
     const subRow = [
-      `<th class="num group-col">평균</th><th class="num">응답자 수 (명)</th>`,
-      ...displayGroups.map(() => `<th class="num group-col">평균</th><th class="num">응답자 수 (명)</th>`)
-    ].join('');
+      `<th class="num group-col">평균</th><th class="num">응답 수(명)</th>`,
+      ...displayGroups.map(() => `<th class="num group-col">평균</th><th class="num">응답 수(명)</th>`)
+    ].join("");
     const bodyRows = compareData.questions.map((question, questionIndex) => {
       const groupCells = displayGroups.map(group => {
         const point = group.points[questionIndex] || { mean: 0, n: 0 };
         return `<td class="num group-col mean-value">${Number(point.mean || 0).toFixed(2)}점</td><td class="num">${Number(point.n || 0).toLocaleString()}</td>`;
-      }).join('');
+      }).join("");
       return `
         <tr>
           <td>${escapeHtml(question.label)}</td>
@@ -4016,7 +4039,7 @@ function buildScaleCompareDataTableHtml(compareData, hiddenGroups = new Set()) {
           ${groupCells}
         </tr>
       `;
-    }).join('');
+    }).join("");
     return wrapResultTable(`
       <table class="result-table">
         <thead>
@@ -4034,19 +4057,19 @@ function buildScaleCompareDataTableHtml(compareData, hiddenGroups = new Set()) {
   const bodyRows = compareData.questions.map(question => `
     <tr>
       <td>${escapeHtml(question.label)}</td>
-      <td class="num mean-value">${Number(question.mean || 0).toFixed(2)}점</td>
       ${buildScaleCompareScoreCells(question.data && question.data.scoreResults, scoreRange)}
+      <td class="num mean-value">${Number(question.mean || 0).toFixed(2)}점</td>
       <td class="num">${Number(question.totalN || 0).toLocaleString()}</td>
     </tr>
-  `).join('');
-  const tableHtml = `
+  `).join("");
+  return wrapResultTable(`
     <table class="result-table">
       <thead>
         <tr>
-          <th rowspan="2">문항</th>
-          <th rowspan="2" class="num">평균</th>
+          <th rowspan="2">문항명</th>
           ${buildScaleCompareScoreHeaders(scoreRange)}
-          <th rowspan="2" class="num">응답자 수 (명)</th>
+          <th rowspan="2" class="num">평균</th>
+          <th rowspan="2" class="num">전체 응답 수(명)</th>
         </tr>
         <tr>
           ${buildScaleCompareScoreSubHeaders(scoreRange)}
@@ -4054,8 +4077,7 @@ function buildScaleCompareDataTableHtml(compareData, hiddenGroups = new Set()) {
       </thead>
       <tbody>${bodyRows}</tbody>
     </table>
-  `;
-  return wrapResultTable(tableHtml);
+  `);
 }
 
 function buildScaleCompareSectionHtml(compareData, hiddenGroups, options = {}) {
@@ -4515,7 +4537,8 @@ function buildDerivedScaleGroupRowHtml(group, scoreRange, viewMode) {
     median: group.median,
     q3: group.q3,
     max: group.max,
-    scoreRange
+    scoreRange,
+    groupLabel: group.label
   };
   return `
     <div class="scale-group-row">
@@ -4569,25 +4592,25 @@ function buildDerivedScaleDataTableHtml(data, hiddenGroups = new Set()) {
       <table class="result-table derived-scale-table">
         <thead>
           <tr>
-            <th>구분</th>
-            <th class="num metric">평균</th>
-            <th class="num metric">최소</th>
+            <th>문항명</th>
+            <th class="num metric">최소값</th>
             <th class="num metric">Q1(하위 25%)</th>
             <th class="num metric">Q2(중앙값)</th>
             <th class="num metric">Q3(상위 25%)</th>
-            <th class="num metric">최대</th>
-            <th class="num respondents">응답자 수 (명)</th>
+            <th class="num metric">최대값</th>
+            <th class="num metric">평균</th>
+            <th class="num respondents">응답 수(명)</th>
           </tr>
         </thead>
         <tbody>
           <tr class="total-row">
-            <td>응답자 전체</td>
-            <td class="num metric mean-value">${data.mean.toFixed(2)}점</td>
+            <td>${escapeHtml(data.targetLabel || "응답 전체")}</td>
             <td class="num metric">${data.min.toFixed(2)}</td>
             <td class="num metric">${data.q1.toFixed(2)}</td>
             <td class="num metric">${data.median.toFixed(2)}</td>
             <td class="num metric">${data.q3.toFixed(2)}</td>
             <td class="num metric">${data.max.toFixed(2)}</td>
+            <td class="num metric mean-value">${data.mean.toFixed(2)}점</td>
             <td class="num respondents">${data.totalN.toLocaleString()}</td>
           </tr>
         </tbody>
@@ -4597,52 +4620,30 @@ function buildDerivedScaleDataTableHtml(data, hiddenGroups = new Set()) {
   }
 
   const displayGroups = getDisplayGroupResults(data.groupResults, hiddenGroups);
-  const rowsHtml = [
-    {
-      label: '응답자 전체',
-      n: data.totalN,
-      mean: data.mean,
-      min: data.min,
-      q1: data.q1,
-      median: data.median,
-      q3: data.q3,
-      max: data.max,
-      total: true
-    },
-    ...displayGroups.map(group => ({
-      label: group.label,
-      n: group.n,
-      mean: group.mean,
-      min: group.min,
-      q1: group.q1,
-      median: group.median,
-      q3: group.q3,
-      max: group.max
-    }))
-  ].map(row => `
-    <tr class="${row.total ? 'total-row' : ''}">
-      <td>${escapeHtml(row.label)}</td>
-      <td class="num metric mean-value">${Number(row.mean || 0).toFixed(2)}점</td>
-      <td class="num metric">${Number(row.min || 0).toFixed(2)}</td>
-      <td class="num metric">${Number(row.q1 || 0).toFixed(2)}</td>
-      <td class="num metric">${Number(row.median || 0).toFixed(2)}</td>
-      <td class="num metric">${Number(row.q3 || 0).toFixed(2)}</td>
-      <td class="num metric">${Number(row.max || 0).toFixed(2)}</td>
-      <td class="num respondents">${Number(row.n || 0).toLocaleString()}</td>
+  const rowsHtml = displayGroups.map(group => `
+    <tr>
+      <td>${escapeHtml(group.label)}</td>
+      <td class="num metric">${Number(group.min || 0).toFixed(2)}</td>
+      <td class="num metric">${Number(group.q1 || 0).toFixed(2)}</td>
+      <td class="num metric">${Number(group.median || 0).toFixed(2)}</td>
+      <td class="num metric">${Number(group.q3 || 0).toFixed(2)}</td>
+      <td class="num metric">${Number(group.max || 0).toFixed(2)}</td>
+      <td class="num metric mean-value">${Number(group.mean || 0).toFixed(2)}점</td>
+      <td class="num respondents">${Number(group.n || 0).toLocaleString()}</td>
     </tr>
-  `).join('');
+  `).join("");
   const tableHtml = `
     <table class="result-table derived-scale-table">
       <thead>
         <tr>
-          <th>구분</th>
-          <th class="num metric">평균</th>
-          <th class="num metric">최소</th>
+          <th>그룹명</th>
+          <th class="num metric">최소값</th>
           <th class="num metric">Q1(하위 25%)</th>
           <th class="num metric">Q2(중앙값)</th>
           <th class="num metric">Q3(상위 25%)</th>
-          <th class="num metric">최대</th>
-          <th class="num respondents">응답자 수 (명)</th>
+          <th class="num metric">최대값</th>
+          <th class="num metric">평균</th>
+          <th class="num respondents">응답 수(명)</th>
         </tr>
       </thead>
       <tbody>${rowsHtml}</tbody>
@@ -4661,14 +4662,14 @@ function buildScaleDataTableHtml(data, hiddenGroups = new Set()) {
         <td class="num">${result.count.toLocaleString()}</td>
         <td class="num">-</td>
       </tr>
-    `).join('');
+    `).join("");
     const tableHtml = `
       <table class="result-table">
         <thead>
           <tr>
-            <th>점수 / 라벨</th>
+            <th>점수</th>
             <th class="num">비율(%)</th>
-            <th class="num">빈도수 (명)</th>
+            <th class="num">응답 수(명)</th>
             <th class="num">평균</th>
           </tr>
         </thead>
@@ -4688,21 +4689,21 @@ function buildScaleDataTableHtml(data, hiddenGroups = new Set()) {
 
   const displayGroups = getDisplayGroupResults(data.groupResults, hiddenGroups);
   const topRow = [
-    `<th rowspan="2">점수 / 라벨</th>`,
-    buildGroupedCountHeader('응답자 전체', data.totalN, 3),
+    `<th rowspan="2">점수</th>`,
+    buildGroupedCountHeader("응답자 전체", data.totalN, 3),
     ...displayGroups.map(group => buildGroupedCountHeader(group.label, group.n, 3))
-  ].join('');
+  ].join("");
   const subRow = [
-    `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th><th class="num">평균</th>`,
-    ...displayGroups.map(() => `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th><th class="num">평균</th>`)
-  ].join('');
-    const bodyRows = data.scoreResults.map(result => {
-      const groupCells = displayGroups.map(group => {
-        const groupResult = group.scoreResults.find(item => item.score === result.score) || { pct: 0, count: 0 };
-        return `<td class="num group-col">${formatPercent(groupResult.pct)}</td><td class="num">${groupResult.count.toLocaleString()}</td><td class="num">-</td>`;
-      }).join('');
-      return `
-        <tr>
+    `<th class="num group-col">비율(%)</th><th class="num">응답 수(명)</th><th class="num">평균</th>`,
+    ...displayGroups.map(() => `<th class="num group-col">비율(%)</th><th class="num">응답 수(명)</th><th class="num">평균</th>`)
+  ].join("");
+  const bodyRows = data.scoreResults.map(result => {
+    const groupCells = displayGroups.map(group => {
+      const groupResult = group.scoreResults.find(item => item.score === result.score) || { pct: 0, count: 0 };
+      return `<td class="num group-col">${formatPercent(groupResult.pct)}</td><td class="num">${groupResult.count.toLocaleString()}</td><td class="num">-</td>`;
+    }).join("");
+    return `
+      <tr>
         <td>${formatScaleScoreLabel(result)}</td>
         <td class="num group-col">${formatPercent(result.pct)}</td>
         <td class="num">${result.count.toLocaleString()}</td>
@@ -4710,8 +4711,8 @@ function buildScaleDataTableHtml(data, hiddenGroups = new Set()) {
         ${groupCells}
       </tr>
     `;
-  }).join('');
-  const totalCells = displayGroups.map(group => `<td class="num group-col">${formatPercent(100)}</td><td class="num">${group.n.toLocaleString()}</td><td class="num">${group.mean.toFixed(2)}점</td>`).join('');
+  }).join("");
+  const totalCells = displayGroups.map(group => `<td class="num group-col">${formatPercent(100)}</td><td class="num">${group.n.toLocaleString()}</td><td class="num">${group.mean.toFixed(2)}점</td>`).join("");
   const tableHtml = `
     <table class="result-table">
       <thead>
@@ -4734,11 +4735,11 @@ function buildScaleDataTableHtml(data, hiddenGroups = new Set()) {
 }
 
 function buildNumericOpenDataTableHtml(data, hiddenGroups = new Set()) {
-  const unit = data.codebookEntry && data.codebookEntry.numberUnit ? data.codebookEntry.numberUnit : '';
+  const unit = data.codebookEntry && data.codebookEntry.numberUnit ? data.codebookEntry.numberUnit : "";
   const rows = data.groupResults
     ? [
         {
-          label: '응답자 전체',
+          label: "응답자 전체",
           total: true,
           n: data.totalN,
           mean: data.mean,
@@ -4760,7 +4761,7 @@ function buildNumericOpenDataTableHtml(data, hiddenGroups = new Set()) {
         }))
       ]
     : [{
-        label: '응답자 전체',
+        label: data.targetLabel || "응답자 전체",
         total: true,
         n: data.totalN,
         mean: data.mean,
@@ -4771,29 +4772,29 @@ function buildNumericOpenDataTableHtml(data, hiddenGroups = new Set()) {
         max: data.max
       }];
   const rowsHtml = rows.map(row => `
-    <tr class="${row.total ? 'total-row' : ''}">
+    <tr class="${row.total ? "total-row" : ""}">
       <td>${escapeHtml(row.label)}</td>
-      <td class="num metric mean-value">${formatNumericMeanDisplay(row.mean, unit)}</td>
       <td class="num metric">${formatNumericValue(row.min)}</td>
       <td class="num metric">${formatNumericValue(row.q1)}</td>
       <td class="num metric">${formatNumericValue(row.median)}</td>
       <td class="num metric">${formatNumericValue(row.q3)}</td>
       <td class="num metric">${formatNumericValue(row.max)}</td>
+      <td class="num metric mean-value">${formatNumericMeanDisplay(row.mean, unit)}</td>
       <td class="num respondents">${Number(row.n || 0).toLocaleString()}</td>
     </tr>
-  `).join('');
+  `).join("");
   const tableHtml = `
     <table class="result-table derived-scale-table">
       <thead>
         <tr>
-          <th>구분</th>
+          <th>문항명</th>
+          <th class="num metric">최소값</th>
+          <th class="num metric">Q1(하위 25%)</th>
+          <th class="num metric">Q2(중앙값)</th>
+          <th class="num metric">Q3(상위 25%)</th>
+          <th class="num metric">최대값</th>
           <th class="num metric">평균</th>
-          <th class="num metric">최소</th>
-          <th class="num metric">Q1 (하위 25%)</th>
-          <th class="num metric">Q2 (중앙값)</th>
-          <th class="num metric">Q3 (상위 25%)</th>
-          <th class="num metric">최대</th>
-          <th class="num respondents">응답자 수 (명)</th>
+          <th class="num respondents">응답 수(명)</th>
         </tr>
       </thead>
       <tbody>${rowsHtml}</tbody>
@@ -5080,9 +5081,9 @@ function buildRankStackChartHtml(data, hiddenRanks) {
     const nonRankedCount = Math.max(0, (r.totalCount || 0) - rankedCount);
     const nonRankedPct = Math.max(0, (r.totalPct || 0) - r.perRank.reduce((s, pr) => s + (pr.pct || 0), 0));
     const segments = r.perRank.map((pr, ri) => {
-      if (hiddenRanks.has(ri)) return '';
+      if (hiddenRanks.has(ri)) return "";
       const w = Math.max(0, pr.pct);
-      if (w <= 0) return '';
+      if (w <= 0) return "";
       const color = rankColor(ri);
       const tip = encodeURIComponent(JSON.stringify({
         kind: 'rank-seg',
@@ -5094,7 +5095,7 @@ function buildRankStackChartHtml(data, hiddenRanks) {
       return `<div class="rank-stack-seg"
                    style="width:${w}%; background:${color};"
                    data-tip="${tip}"></div>`;
-    }).join('');
+    }).join("");
     const visiblePct = r.perRank.reduce((s, pr, ri) => s + (hiddenRanks.has(ri) ? 0 : pr.pct), 0);
     const fallbackWidth = Math.max(0, Math.min(100, nonRankedPct));
     const fallbackTip = encodeURIComponent(JSON.stringify({
@@ -5104,14 +5105,16 @@ function buildRankStackChartHtml(data, hiddenRanks) {
       pct: nonRankedPct,
       count: nonRankedCount
     }));
-    const trackHtml = segments || (fallbackWidth > 0
+    const fallbackHtml = fallbackWidth > 0
       ? `<div class="rank-stack-seg" style="width:${fallbackWidth}%; background:#b88383;" data-tip="${fallbackTip}"></div>`
-      : '');
+      : "";
+    const trackHtml = `${segments}${fallbackHtml}`;
+    const displayedPct = visiblePct + nonRankedPct;
     return `
       <div class="rank-stack-row">
         <div class="rank-stack-label" title="${escapeHtml(r.option)}" data-tip="${labelTip}">${escapeHtml(r.option)}</div>
         <div class="rank-stack-track">${trackHtml}</div>
-        <div class="hbar-value rank-stack-value">${formatPercent(segments ? visiblePct : nonRankedPct)}</div>
+        <div class="hbar-value rank-stack-value">${formatPercent(displayedPct)}</div>
       </div>
     `;
   }).join('');
@@ -5226,7 +5229,7 @@ function buildRankDataTableHtml(data, hiddenGroups = new Set()) {
       `<th rowspan="2" class="num">종합 순위</th>`
     ].join('');
     const subRow = [
-      ...rankLabels.map(() => `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>`)
+      ...rankLabels.map(() => `<th class="num group-col">비율(%)</th><th class="num">응답 수(명)</th>`)
     ].join('');
     const bodyRows = totalResults.map(r => {
       const rankObj = data.ranking.find(rk => rk.option === r.option);
@@ -5285,7 +5288,7 @@ function buildRankDataTableHtml(data, hiddenGroups = new Set()) {
   ].join('');
   const subRow = [
     ...[null, ...displayGroups].map(() =>
-      rankLabels.map(() => `<th class="num group-col">비율(%)</th><th class="num">빈도수 (명)</th>`).join('')
+      rankLabels.map(() => `<th class="num group-col">비율(%)</th><th class="num">응답 수(명)</th>`).join('')
     )
   ].join('');
 
@@ -5421,17 +5424,16 @@ function findOtherTextColumnIndex(targetLabel) {
 
 function buildOtherResponsesHtml(targetLabel, rows) {
   const entry = resultState.codebookByLabel.get(targetLabel);
-  if (!entry || !entry.otherInput) return '';
+  if (!entry || !entry.otherInput) return "";
   const textIdx = findOtherTextColumnIndex(targetLabel);
-  if (textIdx === undefined) return '';
-  const textSet = new Set();
+  if (textIdx === undefined) return "";
+  const texts = [];
   rows.forEach(row => {
     const text = cleanCell((row || [])[textIdx]);
-    if (text) textSet.add(text);
+    if (text) texts.push(text);
   });
-  const texts = [...textSet];
-  if (texts.length === 0) return '';
-  const listHtml = texts.map(text => `<li>${escapeHtml(text)}</li>`).join('');
+  if (texts.length === 0) return "";
+  const listHtml = texts.map(text => `<li>${escapeHtml(text)}</li>`).join("");
   return `
     <div class="other-response-box">
       <div class="other-response-title">기타 응답<span class="other-response-count">${texts.length}건</span></div>
@@ -5445,12 +5447,12 @@ function getOtherResponseTexts(targetLabel, rows) {
   if (!entry || !entry.otherInput) return [];
   const textIdx = findOtherTextColumnIndex(targetLabel);
   if (textIdx === undefined) return [];
-  const textSet = new Set();
+  const texts = [];
   (rows || []).forEach(row => {
     const text = cleanCell((row || [])[textIdx]);
-    if (text) textSet.add(text);
+    if (text) texts.push(text);
   });
-  return [...textSet];
+  return texts;
 }
 
 function openOtherResponsesModal(targetLabel, event) {
@@ -5602,7 +5604,7 @@ function buildChoiceSectionHtml(data, rows) {
   const fullText = buildQuestionFullHtml(codebookEntry);
   const visualClass = getResultVisualClass(!!groupResults);
   const tableNoteHtml = data.isMulti
-    ? '<div class="result-table-note">복수응답 문항이므로 각 보기의 비율을 모두 더하면 100%를 초과할 수 있습니다.</div>'
+    ? '<div class="result-table-note">객관식 중복 응답 문항으로, 보기별 비율 합계는 100%를 초과할 수 있습니다.</div>'
     : '';
 
   return `
@@ -6080,126 +6082,89 @@ function positionTooltip(tip, e) {
 
 function formatTooltipHtml(d) {
   const pct = (v) => formatPercent(v);
-  const n = (v) => 'N=' + Number(v || 0).toLocaleString();
+  const n = (v) => "N=" + Number(v || 0).toLocaleString();
   const line = (s) => `<div>${s}</div>`;
   switch (d.kind) {
-    case 'option-label':
-      return [
-        line(escapeHtml(d.option))
-      ].join('');
-    case 'question-full':
-      return [
-        line(escapeHtml(d.label || '')),
-        d.full ? line(`Q. ${escapeHtml(d.full)}`) : ''
-      ].join('');
-    case 'basic-bar':
-      return [
-        line(escapeHtml(d.option)),
-        line(pct(d.pct)),
-        line(n(d.count))
-      ].join('');
-    case 'compare-bar':
-      return [
-        '<div>응답자 전체</div>',
-        line(escapeHtml(d.option)),
-        line(pct(d.pct)),
-        line(n(d.count))
-      ].join('');
-    case 'group-dot':
-      return [
-        line(escapeHtml(d.groupLabel)),
-        line(escapeHtml(d.option)),
-        line(pct(d.pct)),
-        line(n(d.count))
-      ].join('');
-    case 'rank-seg':
-    case 'rank-nonranked':
-      return [
-        line(escapeHtml(d.option)),
-        line(escapeHtml(d.rankLabel)),
-        line(pct(d.pct)),
-        line(n(d.count))
-      ].join('');
-    case 'rank-group-text': {
-      const head = [
-        line(escapeHtml(d.groupLabel)),
-        line(escapeHtml(d.option))
-      ];
-      const perRank = (d.perRank || []).map(pr =>
-        line(`${escapeHtml(pr.rankLabel)}: ${pct(pr.pct)}`)
-      );
-      const tail = [line(n(d.count))];
-      return [...head, ...perRank, ...tail].join('');
+    case "option-label":
+      return [line(escapeHtml(d.option))].join("");
+    case "question-full":
+      return [line(escapeHtml(d.label || "")), d.full ? line(`Q. ${escapeHtml(d.full)}`) : ""].join("");
+    case "basic-bar":
+      return [line(escapeHtml(d.option)), line(pct(d.pct)), line(n(d.count))].join("");
+    case "compare-bar":
+      return [line("응답자 전체"), line(escapeHtml(d.option)), line(pct(d.pct)), line(n(d.count))].join("");
+    case "group-dot":
+      return [line(escapeHtml(d.groupLabel)), line(escapeHtml(d.option)), line(pct(d.pct)), line(n(d.count))].join("");
+    case "rank-seg":
+    case "rank-nonranked":
+      return [line(escapeHtml(d.option)), line(escapeHtml(d.rankLabel)), line(pct(d.pct)), line(n(d.count))].join("");
+    case "rank-group-text": {
+      const head = [line(escapeHtml(d.groupLabel)), line(escapeHtml(d.option))];
+      const perRank = (d.perRank || []).map(pr => line(`${escapeHtml(pr.rankLabel)}: ${pct(pr.pct)}`));
+      return [...head, ...perRank, line(n(d.count))].join("");
     }
-    case 'scale-segment':
+    case "scale-segment":
       return [
-        line(`${escapeHtml(String(d.score))}점`),
-        d.scoreLabel && d.scoreLabel !== `${d.score}점` ? line(escapeHtml(d.scoreLabel)) : '',
+        line(escapeHtml(d.scoreLabel && d.scoreLabel !== `${d.score}점` ? `${d.score} · ${d.scoreLabel}` : `${d.score}점`)),
         line(pct(d.pct)),
         line(n(d.count))
-      ].join('');
-    case 'scale-mean':
+      ].join("");
+    case "scale-mean":
       return [
-        d.questionLabel ? line(escapeHtml(d.questionLabel)) : '',
-        d.groupLabel ? line(escapeHtml(d.groupLabel)) : '',
-        line(`평균 ${Number(d.mean || 0).toFixed(2)}점`),
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : "",
+        d.questionLabel ? line(escapeHtml(d.questionLabel)) : "",
+        line(`평균값 ${Number(d.mean || 0).toFixed(2)}점`),
         line(n(d.totalN))
-      ].join('');
-    case 'derived-scale-violin':
+      ].join("");
+    case "derived-scale-quartile":
       return [
-        line(`연속값 분포`),
-        line(n(d.totalN)),
-        line(`최소 ${Number(d.min || 0).toFixed(2)}점`),
-        line(`최대 ${Number(d.max || 0).toFixed(2)}점`)
-      ].join('');
-    case 'derived-scale-quartile':
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : "",
+        line(escapeHtml(d.label || "")),
+        line(`사분위값 ${Number(d.value || 0).toFixed(2)}점`)
+      ].join("");
+    case "numeric-hist-bin":
       return [
-        line(escapeHtml(d.label)),
-        line(`${Number(d.value || 0).toFixed(2)}점`)
-      ].join('');
-    case 'numeric-hist-bin':
-      return [
-        d.groupLabel ? line(escapeHtml(d.groupLabel)) : '',
-        line(`구간 ${escapeHtml(d.rangeLabel || '')}`),
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : "",
+        line(`구간 범위 ${escapeHtml(d.rangeLabel || "")}`),
         line(pct(d.pct)),
         line(n(d.count))
-      ].join('');
-    case 'numeric-mean':
+      ].join("");
+    case "numeric-mean":
       return [
-        d.groupLabel ? line(escapeHtml(d.groupLabel)) : '',
-        line(`평균 ${formatNumericMeanDisplay(d.mean, d.unit || '')}`),
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : "",
+        line(`평균값 ${formatNumericMeanDisplay(d.mean, d.unit || "")}`),
         line(n(d.totalN))
-      ].join('');
-    case 'numeric-quartile':
+      ].join("");
+    case "numeric-quartile":
       return [
-        d.groupLabel ? line(escapeHtml(d.groupLabel)) : '',
-        line(escapeHtml(d.tooltipLabel || d.label || '')),
-        line(formatNumericValueWithUnit(Number(d.value), d.unit || ''))
-      ].join('');
-    case 'numeric-whisker-range':
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : "",
+        line(escapeHtml(d.tooltipLabel || d.label || "")),
+        line(`사분위값 ${formatNumericValueWithUnit(Number(d.value), d.unit || "")}`)
+      ].join("");
+    case "numeric-whisker-range":
       return [
-        d.groupLabel ? line(escapeHtml(d.groupLabel)) : '',
-        line(`최소 ${formatNumericValueWithUnit(Number(d.min), d.unit || '')}`),
-        line(`최대 ${formatNumericValueWithUnit(Number(d.max), d.unit || '')}`),
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : "",
+        line(`최소값 ${formatNumericValueWithUnit(Number(d.min), d.unit || "")}`),
+        line(`최대값 ${formatNumericValueWithUnit(Number(d.max), d.unit || "")}`),
         line(n(d.totalN))
-      ].join('');
-    case 'numeric-whisker-box':
+      ].join("");
+    case "numeric-whisker-box":
       return [
-        d.groupLabel ? line(escapeHtml(d.groupLabel)) : '',
-        line(`Q1 ${formatNumericValueWithUnit(Number(d.q1), d.unit || '')}`),
-        line(`Q2 ${formatNumericValueWithUnit(Number(d.median), d.unit || '')}`),
-        line(`Q3 ${formatNumericValueWithUnit(Number(d.q3), d.unit || '')}`),
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : "",
+        line(`Q1(하위 25%) ${formatNumericValueWithUnit(Number(d.q1), d.unit || "")}`),
+        line(`Q2(중앙값) ${formatNumericValueWithUnit(Number(d.median), d.unit || "")}`),
+        line(`Q3(상위 25%) ${formatNumericValueWithUnit(Number(d.q3), d.unit || "")}`),
         line(n(d.totalN))
-      ].join('');
-    case 'scale-compare-group-dot':
+      ].join("");
+    case "scale-compare-group-dot":
       return [
-        d.questionLabel ? line(escapeHtml(d.questionLabel)) : '',
+        d.questionLabel ? line(escapeHtml(d.questionLabel)) : "",
         line(escapeHtml(d.groupLabel)),
-        line(`평균 ${Number(d.mean || 0).toFixed(2)}점`),
-        d.totalN !== undefined ? line(n(d.totalN)) : ''
-      ].join('');
+        line(`평균값 ${Number(d.mean || 0).toFixed(2)}점`),
+        d.totalN !== undefined ? line(n(d.totalN)) : ""
+      ].join("");
     default:
-      return '';
+      return "";
   }
 }
 
@@ -6273,3 +6238,10 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(() => { initResultFeature(); }, 0);
 }
+
+
+
+
+
+
+
