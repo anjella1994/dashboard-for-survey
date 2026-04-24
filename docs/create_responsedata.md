@@ -5,6 +5,49 @@
 
 ---
 
+## 0. 공통 운영 원칙
+
+### 0-1. AI의 기본 태도
+- 사용자가 설문 구조와 데이터 구조를 잘 모를 수 있음을 전제로, 가능한 한 AI가 스스로 맥락을 읽고 유연하게 추정하여 작업을 진행합니다.
+- 다만 추정해서 채운 내용은 그대로 숨기지 말고, 가능한 한 사용자에게 명시적으로 알려주고 확인을 요청합니다.
+- 즉, **추정은 적극적으로 하되, 추정 사실은 투명하게 공유**하는 것이 기본 원칙입니다.
+
+### 0-2. 불확실성 처리 단계
+- 모든 판단은 가능하면 아래 4단계 중 하나로 내부적으로 구분하여 처리합니다.
+  - `확정`: 입력 자료 간 근거가 명확하게 일치하는 경우
+  - `높은 확률 추정`: 직접적인 명시는 없지만 문맥상 거의 확실한 경우
+  - `낮은 확률 추정`: 어느 정도 추정은 가능하지만 오인 가능성이 있는 경우
+  - `판별 불가`: 근거가 부족하여 안전하게 결정할 수 없는 경우
+- `확정`, `높은 확률 추정`은 우선 반영하되 사용자에게 어떤 항목이 추정인지 알려줍니다.
+- `낮은 확률 추정`은 반영할 수는 있지만, 반드시 사용자 확인이 필요한 후보로 함께 보고합니다.
+- `판별 불가`는 억지로 확정하지 말고 빈칸, 미매핑, 별도 메모 등 보수적인 방식으로 남깁니다.
+
+### 0-3. Best-Effort + 보고 우선
+- 일부 정보가 불완전하더라도, 가능한 범위까지 우선 결과물을 생성합니다.
+- 단, 애매한 항목, 추정 항목, 누락 항목, 사용자 확인이 필요한 항목은 별도로 정리하여 함께 보고합니다.
+- 즉, 기본 전략은 `생성을 최대한 진행하고`, `불확실한 부분은 보고서/메모/사용자 확인 항목으로 남기는 것`입니다.
+
+### 0-4. 사용자 확인 방식
+- 사용자 확인이 필요한 항목 수를 임의로 제한하지 않습니다.
+- 다만 사소한 확인 질문을 반복적으로 많이 던지기보다는, 생성 결과를 최대한 진행한 뒤 확인이 필요한 항목을 묶어서 명확하게 제시합니다.
+- 사용자에게 확인을 요청할 때는 반드시 "왜 확인이 필요한지", "어떤 값으로 추정했는지", "대안이 무엇인지"를 함께 설명합니다.
+
+### 0-5. 예시 입력 -> 예시 출력 섹션
+- 이 문서는 최종적으로 반드시 `예시 입력 -> 예시 출력` 섹션을 포함해야 합니다.
+- 예시는 비전문 사용자도 이해할 수 있도록, 실제 설문 문항과 실제 CSV 행 형태에 가까운 작은 샘플로 작성합니다.
+- 예시에서는 "입력 자료의 어떤 부분을 보고", "어떤 판단을 했고", "최종 출력이 어떻게 되는지"가 한 번에 보이도록 구성합니다.
+
+### 0-6. 권장 작업 순서
+- 실제 작업은 아래 순서로 진행하는 것을 기본으로 합니다.
+1. 입력 자료에서 코드북과 원본 로데이터의 역할을 먼저 식별합니다.
+2. 코드북의 문항 목록과 컬럼 순서를 기준으로 출력 뼈대를 잡습니다.
+3. 원본 로데이터에서 각 문항에 대응하는 원본 컬럼을 의미 기반으로 매칭합니다.
+4. `value_code_map`, 보기 구조, 척도 길이를 기준으로 `responsedata_value.csv`와 `responsedata_label.csv`를 변환 생성합니다.
+5. `expanded`, `derived`, 기타 텍스트 컬럼을 코드북 정의에 맞게 생성합니다.
+6. 추정값, 결측 처리, 특수 케이스, 미매핑 항목은 `responsedata_mapping_report.csv`에 함께 기록합니다.
+
+---
+
 ## 1. 입력 자료 자동 식별 원칙
 
 파일명에만 의존하지 말고, **내용과 문맥을 보고** 아래 역할을 식별합니다.
@@ -14,7 +57,7 @@
 - `question_no`, `question_label`, `response_type`, `value_count`, `value_code_map`, `data_column_role` 등
 
 ### 1-2. 업체 로데이터 식별
-- 응답자 1명이 1행인 wide 형식이거나, 응답자-문항 조합이 1행인 long 형식일 수 있습니다.
+- 이 문서에서는 응답자 1명이 1행인 로데이터를 대상으로 합니다.
 - 형식은 XLSX, CSV 등 무엇이든 가능합니다.
 - 컬럼값이 숫자 코드로 되어 있을 수도 있고, 텍스트 라벨로 되어 있을 수도 있습니다.
 
@@ -22,11 +65,15 @@
 
 ## 2. 코드북-로데이터 컬럼 매칭 원칙
 
-- 코드북의 `question_label` 또는 `question_full`과 업체 로데이터의 컬럼명/컬럼 라벨을 **의미 기반으로 매칭**합니다.
-- 단어가 완전히 같지 않아도 질문 의도가 동일하면 같은 문항으로 볼 수 있습니다.
-- 확신이 낮다면 과도한 추정을 하지 말고, 해당 컬럼은 빈칸으로 둡니다.
-- 코드북에 `question_full`이 비어 있는 행(패널 정보)은 `question_label`만으로 매칭합니다.
-- 출력 컬럼명은 `question_label`을 사용하되, 내부 매핑과 계산식 해석 기준은 `question_no`를 우선 사용합니다.
+- 코드북과 로데이터의 컬럼 매칭은 아래 우선순위로 판단합니다.
+1. `question_full` 의미 일치
+2. `question_label` 직접 일치 또는 유사 일치
+3. 보기 목록, 척도 길이, 응답 구조 일치
+4. 주변 컬럼 문맥, 섹션명, 원자료 설명 등 보조 근거
+- 단어가 완전히 같지 않아도 질문 의도와 보기 구조가 동일하면 같은 문항으로 볼 수 있습니다.
+- 코드북에 `question_full`이 비어 있는 행(패널 정보 등)은 `question_label`과 보기 구조를 중심으로 매칭합니다.
+- 확신이 낮다면 과도한 추정을 하지 말고, 해당 컬럼은 빈칸으로 두거나 미매핑으로 남긴 뒤 사용자 확인 후보로 보고합니다.
+- 출력 컬럼명은 `question_label`을 사용하되, 한 번 매칭이 확정된 이후 내부 처리와 계산식 해석 기준은 `question_no`를 사용합니다.
 
 ---
 
@@ -35,8 +82,8 @@
 업체 로데이터는 숫자 코드로 올 수도 있고, 텍스트 라벨로 올 수도 있습니다.
 어떤 형식으로 오든 코드북의 `value_code_map`을 기준으로 양방향 변환합니다.
 
-- 업체가 **코드로 줬을 때**: `value_code_map`을 참고해 라벨로 변환 → `wide_label` 생성
-- 업체가 **라벨로 줬을 때**: `value_code_map`을 역참조해 코드로 변환 → `wide_value` 생성
+- 업체가 **코드로 줬을 때**: `value_code_map`을 참고해 라벨로 변환하여 `responsedata_label.csv`를 생성합니다.
+- 업체가 **라벨로 줬을 때**: `value_code_map`을 역참조해 코드로 변환하여 `responsedata_value.csv`를 생성합니다.
 - 값 표기에 흔들림이 있으면 의미가 명확한 경우에만 정규화합니다.
   - 예: `후기밀레니얼`과 `후기 밀레니얼`은 같은 값으로 처리 가능
 - `value_code_map`이 비어 있는 경우에만 `response_options`의 순서를 보조 기준으로 사용할 수 있습니다.
@@ -48,11 +95,24 @@
   - 순위형 `expanded` → 원문항과 동일한 `value_code_map`
   - 기타 텍스트용 `expanded` → 코드 변환 없이 응답자가 직접 입력한 원문 텍스트를 그대로 적재
 
+### 3-1. 값 불일치 처리 규칙
+- 코드북에는 없지만 로데이터에는 존재하는 코드/라벨은 임의로 코드북에 추가하지 않습니다.
+- 정규화가 명확한 경우에만 띄어쓰기, 언더스코어, 괄호, 대소문자 차이를 통합합니다.
+- 부분 일치만으로는 강제 매칭하거나 강제 변환하지 않습니다.
+- 낮은 확률 추정으로 변환한 값은 반드시 `responsedata_mapping_report.csv`에 추정 사실과 근거를 남깁니다.
+- 끝까지 판별할 수 없는 값은 빈칸 또는 미매핑으로 남기고, 생성 결과에는 반영 여부를 보고합니다.
+
+### 3-2. 결측치 / 무응답 / 특수값 처리 규칙
+- 빈칸, `NA`, `N/A`, `-`, `무응답`, `모름`, `999`, `99` 등은 우선 결측 후보로 인식합니다.
+- 다만 해당 값이 실제 보기 코드로 정의된 경우에는 결측으로 처리하지 않습니다.
+- 결측으로 판단된 값은 `responsedata_value.csv`, `responsedata_label.csv` 모두 빈칸으로 둡니다.
+- 결측인지 실제 응답인지 애매한 특수값은 억지로 변환하지 말고 `responsedata_mapping_report.csv`에 별도로 기록합니다.
+
 ---
 
 ## 4. 출력 파일 구조
 
-`responsedata_value.csv`와 `responsedata_label.csv`는 동일한 구조를 가집니다.
+`responsedata_value.csv`와 `responsedata_label.csv`는 동일한 컬럼 구조를 가집니다. 둘의 차이는 값 표현 방식뿐입니다.
 
 | 위치 | 컬럼명 | 설명 |
 |:---|:---|:---|
@@ -62,19 +122,38 @@
 
 ### 4-1. survey_year 처리 원칙
 
-- `survey_year`는 우선 로데이터 파일 내부 정보에서 추론합니다.
-- 예: 조사 연도 구분 변수, 응답 완료일시, 날짜 컬럼, 시트명, 변수 라벨, 값 라벨 등
-- 로데이터 파일 안에서 충분한 근거를 찾을 수 있으면 해당 연도를 사용합니다.
-- 파일 내부 정보만으로 조사 연도를 확정하기 어렵다면, 현재 시스템 시간을 기준으로 연도를 임시 적용합니다.
-- 이 경우에는 반드시 사용자에게 로데이터에서 조사 연도를 확정하지 못했다는 점을 알리고, 현재 연도를 임시 적용했음을 함께 설명한 뒤 확인을 구합니다.
+- `survey_year`는 아래 순서대로 추론합니다.
+1. 로데이터 내부의 조사 연도 컬럼 또는 변수
+2. 응답 완료일시, 날짜 컬럼 등 로데이터 내부 날짜 정보
+3. 파일명
+4. 시트명 또는 파일 내부 메타정보
+5. 현재 시스템 시간 기준 연도(최후 fallback)
+- 위 단계에서 충분한 근거를 찾을 수 있으면 해당 연도를 사용합니다.
+- 현재 시스템 시간 기준 연도를 쓰는 경우에는 반드시 "로데이터에서 조사 연도를 확정하지 못해 임시 적용했다"는 사실을 함께 보고하고 사용자 확인을 구합니다.
 - 사용자가 다른 연도를 지정하면 그 값을 우선 적용합니다.
 
-- 출력 컬럼명은 `question_label`을 사용합니다.
-- 다만 내부적으로는 `question_no`를 기준 키로 사용해 매핑, 변환, 계산을 수행합니다.
+### 4-2. respondent_no 처리 원칙
+- `respondent_no`는 원본 ID와 별도로, **항상 1부터 시작하는 연속 순번**을 우선 사용합니다.
+- 즉, 원자료에 별도 응답자 ID가 있더라도 `respondent_no`는 출력용 순번 컬럼으로 새로 생성합니다.
+- 순번은 최종 출력 행 순서 기준으로 `1, 2, 3 ... n` 형태로 부여합니다.
+
+### 4-3. 출력 컬럼 생성 원칙
+- 출력 컬럼명은 코드북의 `question_label`을 사용합니다.
 - `data_column_role = raw` 행: 1개 컬럼 생성
 - `data_column_role = expanded` 행: 1개 컬럼 생성 (원문항과 별도)
 - `data_column_role = derived` 행: 1개 컬럼 생성 (계산값)
+
+### 4-4. `responsedata_mapping_report.csv` 필수 컬럼
 - `responsedata_mapping_report.csv`는 코드북 문항과 원본 로데이터 변수의 매핑 결과를 확인하는 검수용 파일로 생성합니다.
+- 최소한 아래 컬럼을 포함해야 합니다.
+  - `question_no`
+  - `question_label`
+  - `target_column`
+  - `source_column`
+  - `match_type`
+  - `confidence`
+  - `status`
+  - `note`
 
 ---
 
@@ -83,70 +162,85 @@
 ### 5-1. 객관식 단일 (`data_column_role = raw`)
 | 파일 | 값 형식 | 예시 |
 |:---|:---|:---|
-| wide_value | 보기 번호 | `2` |
-| wide_label | 보기 텍스트 | `중견/중소기업` |
+| `responsedata_value.csv` | 보기 번호 | `2` |
+| `responsedata_label.csv` | 보기 텍스트 | `중견/중소기업` |
 
 ### 5-2. 객관식 중복 (`data_column_role = raw`)
 | 파일 | 값 형식 | 예시 |
 |:---|:---|:---|
-| wide_value | 선택한 보기 번호 (파이프 구분자) | `1\|3\|5` |
-| wide_label | 선택한 보기 텍스트 (파이프 구분자) | `IT/통신\|제조/생산\|유통/판매` |
+| `responsedata_value.csv` | 선택한 보기 번호 (파이프 구분자) | `1\|3\|5` |
+| `responsedata_label.csv` | 선택한 보기 텍스트 (파이프 구분자) | `IT/통신\|제조/생산\|유통/판매` |
+
+추가 규칙
+- 구분자는 기본적으로 `|`를 사용합니다.
+- 원본 로데이터가 `,`, `;`, `/`, 줄바꿈 등 다른 구분자를 사용하더라도, 실제 복수응답 구분자로 명확히 해석되는 경우에는 `|` 기준으로 정규화할 수 있습니다.
+- 단, 보기 라벨 자체에 해당 문자가 포함되어 있을 가능성이 있으면 함부로 분리하지 말고 사용자 확인 후보 또는 미매핑으로 남깁니다.
 
 ### 5-3. 객관식 중복 파생행 (`data_column_role = expanded`)
 해당 보기를 선택했는지 여부를 나타냅니다.
 | 파일 | 값 형식 |
 |:---|:---|
-| wide_value | `0` (미선택) 또는 `1` (선택) |
-| wide_label | `미선택` 또는 `선택` |
+| `responsedata_value.csv` | `0` (미선택) 또는 `1` (선택) |
+| `responsedata_label.csv` | `미선택` 또는 `선택` |
 
 ### 5-4. 객관식 순위 (`data_column_role = raw`)
 | 파일 | 값 형식 | 예시 |
 |:---|:---|:---|
-| wide_value | 1순위부터 차례로 보기 번호 (파이프 구분자) | `3\|1\|5` |
-| wide_label | 1순위부터 차례로 보기 텍스트 (파이프 구분자) | `제조/생산\|IT/통신\|유통/판매` |
+| `responsedata_value.csv` | 1순위부터 차례로 보기 번호 (파이프 구분자) | `3\|1\|5` |
+| `responsedata_label.csv` | 1순위부터 차례로 보기 텍스트 (파이프 구분자) | `제조/생산\|IT/통신\|유통/판매` |
+
+추가 규칙
+- 순위형 문항은 `raw` 열과 순위별 `expanded` 열을 함께 생성합니다.
+- 순위형 문항에는 실제 순위를 매긴 응답 외에도 `해당 없음`, `보기 중 해당 없음`, `선택 없음` 같은 **비순위 응답**이 들어 있을 수 있습니다.
+- 이런 비순위 응답은 `raw` 컬럼에는 그대로 유지합니다.
+- 즉, **비순위 응답도 `responsedata_value.csv`, `responsedata_label.csv`의 순위형 `raw` 컬럼에서는 살아 있어야 합니다.**
+- 다만 이런 응답은 `__1순위`, `__2순위`, `__3순위` 같은 순위별 `expanded` 컬럼으로 임의 분해하면 안 됩니다.
+- 또한 순위 가중치 계산, 순위별 빈도 집계 등 ranked 응답 전용 집계에도 일반 순위 응답처럼 포함하면 안 됩니다.
+- 이런 사례는 `responsedata_mapping_report.csv`에 별도로 기록해 사용자 확인 후보로 보고합니다.
 
 ### 5-5. 객관식 순위 파생행 (`data_column_role = expanded`)
 해당 순위에 어떤 보기를 선택했는지 나타냅니다.
 | 파일 | 값 형식 | 예시 |
 |:---|:---|:---|
-| wide_value | 해당 순위에 선택한 보기 번호 | `3` |
-| wide_label | 해당 순위에 선택한 보기 텍스트 | `제조/생산` |
+| `responsedata_value.csv` | 해당 순위에 선택한 보기 번호 | `3` |
+| `responsedata_label.csv` | 해당 순위에 선택한 보기 텍스트 | `제조/생산` |
 
 ### 5-6. 객관식 척도 (`data_column_role = raw`)
 | 파일 | 값 형식 |
 |:---|:---|
-| wide_value | 응답 숫자 값 |
-| wide_label | 응답 숫자 값 (동일) |
+| `responsedata_value.csv` | 응답 숫자 값 |
+| `responsedata_label.csv` | 응답 숫자 값 (동일) |
 
 ### 5-7. 주관식 숫자 (`data_column_role = raw`)
 | 파일 | 값 형식 |
 |:---|:---|
-| wide_value | 응답 숫자 값 |
-| wide_label | 응답 숫자 값 (동일) |
+| `responsedata_value.csv` | 응답 숫자 값 |
+| `responsedata_label.csv` | 응답 숫자 값 (동일) |
 
 ### 5-8. 주관식 문자 (`data_column_role = raw`)
 | 파일 | 값 형식 |
 |:---|:---|
-| wide_value | 응답 텍스트 |
-| wide_label | 응답 텍스트 (동일) |
+| `responsedata_value.csv` | 응답 텍스트 |
+| `responsedata_label.csv` | 응답 텍스트 (동일) |
 
 ### 5-9. 파생 지표 (`data_column_role = derived`)
 코드북의 `formula`에 정의된 계산식을 수행합니다. 수식의 변수명은 `question_no` 기준으로 해석합니다.
 | 파일 | 값 형식 |
 |:---|:---|
-| wide_value | 계산 결과값 (소수점 둘째 자리까지) |
-| wide_label | 계산 결과값 (동일) |
+| `responsedata_value.csv` | 계산 결과값 (소수점 둘째 자리까지) |
+| `responsedata_label.csv` | 계산 결과값 (동일) |
 
 - 척도형 문항의 평균/지수형 `derived`는 코드북의 `response_type`, `value_count`, `value_code_map`을 그대로 상속한 것으로 간주합니다.
 - 즉, 값 자체는 숫자 계산 결과를 쓰되, 메타정보 해석은 원 척도 구조를 유지합니다.
 
 ---
 
-## 6. 우선순위 원칙
+## 6. 실무 우선순위 원칙
 
 1. 코드북의 `value_code_map`이 있으면 반드시 이를 기준으로 변환합니다.
-2. 매칭이 불확실하면 억지로 채우지 말고 빈칸으로 둡니다.
-3. AI가 임의로 값을 추정하거나 만들어 넣지 않습니다.
+2. 코드북에 정의된 컬럼 구조(`raw`, `expanded`, `derived`)를 우선 보존합니다.
+3. 매칭이 불확실하면 억지로 채우지 말고 빈칸 또는 미매핑으로 남깁니다.
+4. AI가 임의로 보기 체계나 응답 코드를 새로 만들어 넣지 않습니다.
 
 ---
 
@@ -157,7 +251,7 @@
 - [ ] 코드북의 모든 행(raw/expanded/derived)에 대응하는 컬럼이 생성되었는가?
 - [ ] 객관식 중복/순위의 expanded 행이 누락 없이 처리되었는가?
 - [ ] derived 컬럼이 formula대로 올바르게 계산되었는가?
-- [ ] wide_value와 wide_label의 차이가 규칙대로 적용되었는가?
+- [ ] `responsedata_value.csv`와 `responsedata_label.csv`의 차이가 규칙대로 적용되었는가?
 - [ ] `value_code_map` 기준 변환이 일관되게 적용되었는가?
 - [ ] `value_count`와 실제 보기 개수/척도 길이가 일치하는가?
 - [ ] 다중선택 `expanded`는 `0/1`, 순위형 `expanded`는 원문항 코드 체계를 따르는가?
@@ -166,10 +260,80 @@
 
 ---
 
+## 7-1. 예시 입력 -> 예시 출력
+
+### 예시 A: 단일선택 라벨형 로데이터
+
+입력 예시
+- 코드북
+  - `question_label = 직급`
+  - `response_type = 객관식 단일`
+  - `value_code_map = 1=사원|2=대리|3=과장`
+- 원본 로데이터 값
+  - `직급 = 과장`
+
+출력 예시
+- `responsedata_value.csv` → `3`
+- `responsedata_label.csv` → `과장`
+- `responsedata_mapping_report.csv` → `match_type = label_to_code`, `confidence = 높음`
+
+### 예시 B: 복수응답 코드형 로데이터
+
+입력 예시
+- 코드북
+  - `question_label = 선호 업종`
+  - `response_type = 객관식 중복`
+  - `value_code_map = 1=IT/통신|2=제조/생산|3=유통/판매`
+- 원본 로데이터 값
+  - `선호 업종 = 1|3`
+
+출력 예시
+- `responsedata_value.csv` → `1|3`
+- `responsedata_label.csv` → `IT/통신|유통/판매`
+- 보기별 `expanded`
+  - `선호 업종_IT/통신` → `1` / `선택`
+  - `선호 업종_제조/생산` → `0` / `미선택`
+  - `선호 업종_유통/판매` → `1` / `선택`
+
+### 예시 C: 순위형 비순위 응답
+
+입력 예시
+- 코드북
+  - `question_label = 선호 업종`
+  - `response_type = 객관식 순위`
+- 원본 로데이터 값
+  - `선호 업종 raw = 보기에 해당하는 응답이 없음`
+  - `선호 업종__1순위 =` 빈칸
+  - `선호 업종__2순위 =` 빈칸
+
+판단
+- raw 응답은 존재하지만, 이는 실제 순위를 매긴 응답이 아니라 비순위 응답임
+- 따라서 raw 컬럼 값은 유지하고, 순위별 expanded는 억지로 채우지 않음
+
+출력 예시
+- `responsedata_value.csv`의 `선호 업종` raw 컬럼 → 원본 기준 유지
+- `responsedata_label.csv`의 `선호 업종` raw 컬럼 → 원본 기준 유지
+- `선호 업종__1순위` → 빈칸 유지
+- `선호 업종__2순위` → 빈칸 유지
+- `responsedata_mapping_report.csv` → `status = special_case`, `note = 비순위 응답이므로 raw에는 유지하고 순위별 expanded/가중치 집계에서는 제외`
+
+### 예시 D: 기타 텍스트 expanded
+
+입력 예시
+- 코드북에 `직무__기타_텍스트` expanded 열 존재
+- 원본 로데이터
+  - `직무 = 기타`
+  - `직무 기타 = 고객성공매니저`
+
+출력 예시
+- `responsedata_value.csv`의 `직무__기타_텍스트` → `고객성공매니저`
+- `responsedata_label.csv`의 `직무__기타_텍스트` → `고객성공매니저`
+- 코드 변환 없이 원문 그대로 유지
+
 ## 8. 기타 직접 입력 추가 규칙
 
 코드북에 `other_input_expected = Y`가 있는 문항은, 단순히 원문항 `raw` 열만 생성하는 것으로 끝나지 않습니다.
-코드북에 기타 텍스트용 `expanded` 행이 존재하면, 로데이터 생성 단계에서도 그 텍스트를 실제 wide 컬럼으로 반드시 생성해야 합니다.
+코드북에 기타 텍스트용 `expanded` 행이 존재하면, 로데이터 생성 단계에서도 그 텍스트를 실제 출력 컬럼으로 반드시 생성해야 합니다.
 
 ### 8-1. 적용 대상
 - `객관식 단일`
@@ -186,6 +350,8 @@
 - 두 파일 모두 값은 동일하게 `응답자가 직접 입력한 원문 텍스트`를 그대로 넣습니다.
 - 기타 텍스트는 숫자 코드/라벨 변환 대상이 아닙니다.
 - 값이 비어 있으면 빈 문자열로 둡니다.
+- 코드북 문서에서 정의한 기타 텍스트 컬럼명 패턴과 동일한 기준을 따릅니다.
+- 즉, `__기타_텍스트`가 권장 형식이지만, 공백/언더스코어/대소문자/접미어 차이만 있는 비슷한 패턴도 유연하게 기타 텍스트 컬럼으로 인식할 수 있습니다.
 
 ### 8-3. 유형별 해석
 - `객관식 단일`
@@ -201,16 +367,10 @@
   - 기타 텍스트 `expanded` 열: 직접 입력 텍스트 원문
 
 ### 8-4. 최종 체크
-- 코드북에 기타 텍스트용 `expanded` 행이 있으면, wide_value/wide_label에도 동일한 이름의 컬럼이 생성되어야 합니다.
+- 코드북에 기타 텍스트용 `expanded` 행이 있으면, `responsedata_value.csv`와 `responsedata_label.csv`에도 동일한 이름의 컬럼이 생성되어야 합니다.
 - `other_input_expected = Y`인데 기타 텍스트용 컬럼이 생성되지 않았다면 생성 실패로 간주합니다.
 - 기타 텍스트용 컬럼은 코드 변환 없이 원문 텍스트가 그대로 들어가야 합니다.
-## 0-1. Rank Response Rules
 
-Apply the following rules to every `객관식 순위` question when generating `responsedata_value.csv` and `responsedata_label.csv`.
+---
 
-- Keep the raw rank answer column and the rank expanded columns together. Do not assume every raw response will also appear in `__1순위`, `__2순위`, `__3순위` style expanded fields.
-- If a response exists in the raw rank answer but does not map to any rank expanded column, keep that raw response in the generated data rather than dropping it.
-- Such raw-only non-ranked responses must still remain available for downstream chart and table display.
-- However, raw-only non-ranked responses are not treated as ranked selections for weighted ranking logic.
-- `기타` direct-input text columns for rank questions must still be generated according to the existing `other_input_expected = Y` rule.
-- Rank direct-input text should remain available to the dashboard so it can be opened from the shared `응답 보기` modal.
+이 문서를 사용할 때는 최종 CSV 3개를 만드는 것에서 끝내지 말고, 어떤 항목이 확정/추정/특수 케이스였는지 `responsedata_mapping_report.csv`를 통해 함께 전달하는 것을 기본 출력 방식으로 봅니다.
