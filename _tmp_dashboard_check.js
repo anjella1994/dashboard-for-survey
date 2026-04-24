@@ -172,7 +172,7 @@ function renderTree(tree) {
     return;
   }
 
-  const chevron = 'arrow_forward_ios_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.png';
+  const chevron = 'assets/icons/arrow_forward_ios_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.png';
 
   tree.forEach((cat1, i1) => {
     const cat = document.createElement('div');
