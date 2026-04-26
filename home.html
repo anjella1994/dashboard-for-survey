@@ -86,18 +86,16 @@
   .list-btn {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 8px;
-    padding: 9px 14px;
+    padding: 6px 12px;
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    font-size: var(--button-2-size);
-    line-height: 1;
+    font-size: var(--button-1-size);
+    line-height: var(--body-line-height);
     font-weight: var(--font-weight-medium);
-    color: var(--text-2);
+    color: #333333;
     background: #fff;
     transition: all .15s;
-    white-space: nowrap;
   }
   .list-btn:hover { border-color: var(--text-2); color: var(--text); }
     .list-btn .icon {
@@ -113,7 +111,7 @@
     justify-content: center;
     background: var(--black);
     color: #fff;
-    font-size: var(--caption-1-size);
+    font-size: var(--label-2-size);
     height: 18px;
     padding: 0 7px;
     border-radius: var(--radius-pill);
@@ -219,7 +217,7 @@
   .upload-label {
     font-size: var(--heading-5-size);
     line-height: var(--heading-line-height);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     color: var(--text);
     text-align: center;
   }
@@ -274,7 +272,7 @@
     background: var(--black);
     color: #fff;
     border-radius: var(--radius-pill);
-    font-size: var(--button-2-size);
+    font-size: var(--button-1-size);
     line-height: var(--body-line-height);
     font-weight: var(--font-weight-medium);
   }
@@ -302,7 +300,7 @@
   .done-title {
     font-size: var(--heading-5-size);
     line-height: var(--heading-line-height);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     color: var(--black);
   }
   .check-icon {
@@ -499,7 +497,7 @@
   .saved-title {
     font-size: var(--heading-6-size);
     line-height: var(--heading-line-height);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-bold);
     color: var(--text);
     margin-bottom: 2px;
     white-space: nowrap;
@@ -599,8 +597,8 @@
   <main class="container">
     <section class="section" aria-labelledby="sec-1-title">
       <h2 id="sec-1-title" class="section-title">1. 설문조사 제목을 입력해주세요.</h2>
-      <input id="survey-title" type="text" class="text-input" placeholder="예: 2025 직장인 사무환경 조사" autocomplete="off" maxlength="50">
-      <div class="field-hint">최대 50자까지 입력할 수 있습니다.</div>
+<input id="survey-title" type="text" class="text-input" placeholder="예: 2025 직장인 사무환경 조사" autocomplete="off" maxlength="30">
+<div class="field-hint">최대 30자까지 입력할 수 있습니다.</div>
       <div id="title-error" class="error-text" role="alert">설문조사 제목을 입력해 주세요.</div>
     </section>
 
@@ -706,7 +704,7 @@
       </div>
     </section>
 
-    <button id="start-btn" class="primary-btn" type="button" disabled>분석 시작</button>
+<button id="start-btn" class="primary-btn" type="button" disabled>대시보드 만들기</button>
 
     <a class="guide-banner" href="#" id="guide-link">
       <span class="guide-desc">문항 코드북과 응답 데이터셋이 무엇인지 모르겠거나, 아직 만들지 않았다면 아래 가이드를 참고해 주세요.</span>

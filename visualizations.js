@@ -5736,7 +5736,7 @@ async function renderResults() {
 
   const targetLabels = getTargetChipLabels();
   if (targetLabels.length === 0) {
-    container.innerHTML = '<div class="result-empty">보고 싶은 문항을 좌측에서 드래그해 주세요.</div>';
+    container.innerHTML = '<div class="result-empty">보고 싶은 문항을 드래그하면 차트가 생성됩니다</div>';
     return;
   }
 

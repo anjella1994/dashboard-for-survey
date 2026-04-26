@@ -32,15 +32,15 @@ Typeface scale
 | `heading-2` | 제목 2 | 24px | Bold |
 | `heading-3` | 제목 3 | 20px | Bold |
 | `heading-4` | 제목 4 | 18px | Semibold |
-| `heading-5` | 제목 5 | 16px | Semibold |
-| `heading-6` | 제목 6 | 14px | Semibold |
+| `heading-5` | 제목 5 | 16px | Bold |
+| `heading-6` | 제목 6 | 14px | Bold |
 | `body-1` | 본문 1 | 18px | Medium |
 | `body-2` | 본문 2 | 16px | Regular |
 | `body-3` | 본문 3 | 14px | Regular |
-| `label-1` | 라벨 1 | 14px | Semibold |
-| `label-2` | 라벨 2 | 14px | Regular |
-| `button-1` | 버튼 1 | 14px | Medium |
-| `button-2` | 버튼 2 | 12px | Medium |
+| `label-1` | 라벨 1 | 14px | Regular |
+| `label-2` | 라벨 2 | 12px | Regular |
+| `button-1` | 버튼 1 | 14px | Regular |
+| `button-2` | 버튼 2 | 12px | Regular |
 | `caption-1` | 캡션 1 | 12px | Regular |
 
 ## Usage Guide
@@ -54,7 +54,7 @@ Typeface scale
 - `body-1`: 강조가 필요한 본문
 - `body-2`: 기본 본문 텍스트
 - `body-3`: 보조 본문, 메타 정보
-- `label-1`: 강조형 라벨
+- `label-1`: 기본 라벨
 - `label-2`: 일반 라벨
 - `button-1`: 기본 버튼 텍스트
 - `button-2`: 작은 버튼 텍스트
@@ -79,7 +79,7 @@ Typeface scale
   --body-3-size: 14px;
 
   --label-1-size: 14px;
-  --label-2-size: 14px;
+  --label-2-size: 12px;
 
   --button-1-size: 14px;
   --button-2-size: 12px;
@@ -93,10 +93,11 @@ Typeface scale
 }
 ```
 
-## Notes
+## Rules
 
-- `heading-4` and `label-1` use `Semibold`
-- `heading-5` and `heading-6` use `Semibold`
+- `heading-4` uses `Semibold`
+- `heading-5` and `heading-6` use `Bold`
 - `body-1` uses `Medium`
-- `button-1` and `button-2` use `Medium`
+- `label-1`, `label-2`, `button-1`, `button-2`, and `caption-1` default to `Regular`
+- When label, button, or caption text needs emphasis, change only the weight to `Semibold`
 - Most interface copy should default to `body-2`
