@@ -30,9 +30,13 @@ font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto San
 | `Body-2` | 본문 2 | 16px | Medium (500) |
 | `Body-3` | 본문 3 | 14px | Medium (500) |
 | `Label-1` | 라벨 1 | 14px | Regular (400) |
+| `Label-1-strong` | 라벨 1 강조 | 14px | Semibold (600) |
 | `Label-2` | 라벨 2 | 12px | Regular (400) |
+| `Label-2-strong` | 라벨 2 강조 | 12px | Semibold (600) |
 | `Button-1` | 버튼 1 | 14px | Regular (400) |
+| `Button-1-strong` | 버튼 1 강조 | 14px | Semibold (600) |
 | `Button-2` | 버튼 2 | 12px | Regular (400) |
+| `Button-2-strong` | 버튼 2 강조 | 12px | Semibold (600) |
 | `Caption-1` | 캡션 1 | 12px | Regular (400) |
 
 - Line-height: Heading `120%` / 나머지 `160%`
@@ -51,9 +55,13 @@ font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto San
 | `Body-2` | 기본 본문 (인풋 텍스트 등) |
 | `Body-3` | 보조 본문, 메타 정보, hint |
 | `Label-1` | 라벨, 가이드 링크 |
+| `Label-1-strong` | 강조 라벨 |
 | `Label-2` | 보조 라벨 |
-| `Button-1` | 기본 버튼 텍스트 |
+| `Label-2-strong` | 강조 보조 라벨 |
+| `Button-1` | 기본 버튼 텍스트 (Default, Gray) |
+| `Button-1-strong` | 강조 버튼 텍스트 (Focus, Black) |
 | `Button-2` | 소형 버튼 텍스트 |
+| `Button-2-strong` | 강조 소형 버튼 텍스트 |
 | `Caption-1` | 주석, 설명, 보조 안내, 오류 메시지 |
 
 ### CSS Tokens
@@ -69,10 +77,14 @@ font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto San
   --body-1-size: 18px;
   --body-2-size: 16px;
   --body-3-size: 14px;
-  --label-1-size: 14px;
-  --label-2-size: 12px;
-  --button-1-size: 14px;
-  --button-2-size: 12px;
+  --label-1-size: 14px;      /* Regular */
+  --label-1-strong: 600;     /* Semibold */
+  --label-2-size: 12px;      /* Regular */
+  --label-2-strong: 600;     /* Semibold */
+  --button-1-size: 14px;     /* Regular */
+  --button-1-strong: 600;    /* Semibold — Focus, Black variant */
+  --button-2-size: 12px;     /* Regular */
+  --button-2-strong: 600;    /* Semibold */
   --caption-1-size: 12px;
 
   --heading-line-height: 1.2;
