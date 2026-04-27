@@ -25,6 +25,7 @@
     --low-4: #cf9d9d;
     --low-3: #d4aeae;
     --low-2: #dac3c3;
+    --color-2: #c67b7b;
 
     /* typography */
     --heading-1-size: 28px;
@@ -346,14 +347,14 @@
   }
   .dz-error-msg {
     display: none;
-    margin-top: 10px;
+    margin-top: 6px;
     font-size: var(--caption-1-size);
-    color: var(--neutral-900);
+    color: var(--color-2);
     text-align: center;
     line-height: var(--body-line-height);
-    padding: 0 6px;
+    padding: 0 4px;
   }
-  .drop-zone.has-error .dz-error-msg { display: block; }
+  .upload-col.has-error .dz-error-msg { display: block; }
 
   .upload-error {
     color: var(--neutral-900);
@@ -633,8 +634,8 @@
                   다시 선택하기
                 </button>
               </div>
-              <div class="dz-error-msg"></div>
             </div>
+            <div class="dz-error-msg"></div>
           </div>
 
           <div class="upload-col">
@@ -661,8 +662,8 @@
                   다시 선택하기
                 </button>
               </div>
-              <div class="dz-error-msg"></div>
             </div>
+            <div class="dz-error-msg"></div>
           </div>
 
           <div class="upload-col">
@@ -689,8 +690,8 @@
                   다시 선택하기
                 </button>
               </div>
-              <div class="dz-error-msg"></div>
             </div>
+            <div class="dz-error-msg"></div>
           </div>
         </div>
 
@@ -1303,21 +1304,22 @@ function validateBundleConsistency(rowsByKey) {
   });
 
   function resetZone(zone) {
-    zone.classList.remove('done', 'has-error');
-    zone.querySelector('.dz-error-msg').textContent = '';
+    zone.classList.remove('done');
+    zone.parentElement.classList.remove('has-error');
+    zone.parentElement.querySelector('.dz-error-msg').textContent = '';
     zone.querySelector('.done-filename').textContent = '';
   }
 
   function setZoneError(zone, msg) {
     zone.classList.remove('done');
-    zone.classList.add('has-error');
-    zone.querySelector('.dz-error-msg').textContent = msg;
+    zone.parentElement.classList.add('has-error');
+    zone.parentElement.querySelector('.dz-error-msg').textContent = msg;
   }
 
   function setZoneDone(zone, filename) {
-    zone.classList.remove('has-error');
+    zone.parentElement.classList.remove('has-error');
     zone.classList.add('done');
-    zone.querySelector('.dz-error-msg').textContent = '';
+    zone.parentElement.querySelector('.dz-error-msg').textContent = '';
     zone.querySelector('.done-filename').textContent = filename;
   }
 
