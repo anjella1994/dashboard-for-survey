@@ -11,8 +11,8 @@
     --black: #0a0a0a;
     --text: #1a1a1a;
     --text-2: #4a4a4a;
-    --text-3: #8a8a8a;
-    --text-4: #b8b8b8;
+    --text-3: #777777;
+    --text-4: #777777;
     --heading-1-size: 28px;
     --heading-2-size: 24px;
     --heading-3-size: 20px;
@@ -70,7 +70,7 @@
 
   .top-bar {
     width: 100%;
-    max-width: 900px;
+    max-width: 840px;
     margin: 0 auto;
     padding: 15px 32px 12px;
     display: flex;
@@ -150,13 +150,13 @@
 
   .container {
     width: 100%;
-    max-width: 900px;
+    max-width: 840px;
     margin: 0 auto;
     padding: 38px 32px 40px;
     flex: 1;
   }
 
-  .section { margin-bottom: 42px; }
+  .section { margin-bottom: 40px; }
   .section-title {
     font-size: var(--heading-4-size);
     line-height: var(--heading-line-height);
@@ -255,6 +255,7 @@
   }
   .dz-hint {
     font-size: var(--body-3-size);
+    font-weight: var(--font-weight-medium);
     color: var(--text-3);
     line-height: var(--body-line-height);
   }
@@ -263,6 +264,7 @@
     margin-top: 8px;
     color: var(--text-4);
     font-size: var(--caption-1-size);
+    font-weight: var(--font-weight-regular);
   }
   .pick-btn {
     display: inline-flex;
@@ -367,20 +369,21 @@
   .primary-btn {
     display: block;
     width: 100%;
-    padding: 18px 22px;
+    height: 54px;
+    padding: 16px 22px;
     background: var(--black);
     color: #fff;
-    font-weight: var(--font-weight-semibold);
-    font-size: var(--heading-4-size);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--heading-5-size);
     line-height: var(--heading-line-height);
-    border-radius: var(--radius-md);
+    border-radius: 12px;
     margin-top: 28px;
     transition: background .15s, transform .05s, opacity .15s;
     letter-spacing: -0.01em;
   }
   .primary-btn:hover:not(:disabled) { background: #222; }
   .primary-btn:active:not(:disabled) { transform: translateY(1px); }
-  .primary-btn:disabled { background: #d4d4d4; color: #fff; cursor: not-allowed; }
+  .primary-btn:disabled { background: #ccc; color: #fff; cursor: not-allowed; }
 
   .guide-banner {
     margin-top: 14px;
@@ -596,14 +599,14 @@
 
   <main class="container">
     <section class="section" aria-labelledby="sec-1-title">
-      <h2 id="sec-1-title" class="section-title">1. 설문조사 제목을 입력해주세요.</h2>
-<input id="survey-title" type="text" class="text-input" placeholder="예: 2025 직장인 사무환경 조사" autocomplete="off" maxlength="30">
-<div class="field-hint">최대 30자까지 입력할 수 있습니다.</div>
+      <h2 id="sec-1-title" class="section-title">1. 설문조사 제목을 입력해 주세요</h2>
+      <input id="survey-title" type="text" class="text-input" placeholder="예: 2025 직장인 사무환경 조사" autocomplete="off" maxlength="30">
+      <div class="field-hint">최대 30자까지 입력할 수 있습니다.</div>
       <div id="title-error" class="error-text" role="alert">설문조사 제목을 입력해 주세요.</div>
     </section>
 
     <section class="section" aria-labelledby="sec-2-title">
-      <h2 id="sec-2-title" class="section-title">2. 문항 코드북과 응답 데이터셋을 업로드해주세요.</h2>
+      <h2 id="sec-2-title" class="section-title">2. 문항 코드북과 응답 데이터셋을 업로드해 주세요</h2>
 
       <div class="upload-wrapper">
         <div class="upload-grid">
@@ -614,8 +617,8 @@
               <div class="dz-default">
                 <div class="dz-hint">
                   여기에 파일을 드래그하거나,<br>
-                  버튼을 눌러 파일을 선택하세요.
-                  <span class="formats">[.csv, .xlsx]</span>
+                  아래 버튼을 눌러 파일을 선택하세요.
+                  <span class="formats">[ .csv · .xlsx ]</span>
                 </div>
                 <button type="button" class="pick-btn" data-pick="codebook">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
@@ -644,8 +647,8 @@
               <div class="dz-default">
                 <div class="dz-hint">
                   여기에 파일을 드래그하거나,<br>
-                  버튼을 눌러 파일을 선택하세요.
-                  <span class="formats">[.csv, .xlsx]</span>
+                  아래 버튼을 눌러 파일을 선택하세요.
+                  <span class="formats">[ .csv · .xlsx ]</span>
                 </div>
                 <button type="button" class="pick-btn" data-pick="value">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
@@ -674,8 +677,8 @@
               <div class="dz-default">
                 <div class="dz-hint">
                   여기에 파일을 드래그하거나,<br>
-                  버튼을 눌러 파일을 선택하세요.
-                  <span class="formats">[.csv, .xlsx]</span>
+                  아래 버튼을 눌러 파일을 선택하세요.
+                  <span class="formats">[ .csv · .xlsx ]</span>
                 </div>
                 <button type="button" class="pick-btn" data-pick="label">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
@@ -704,7 +707,7 @@
       </div>
     </section>
 
-<button id="start-btn" class="primary-btn" type="button" disabled>대시보드 만들기</button>
+    <button id="start-btn" class="primary-btn" type="button" disabled>대시보드 만들기</button>
 
     <a class="guide-banner" href="#" id="guide-link">
       <span class="guide-desc">문항 코드북과 응답 데이터셋이 무엇인지 모르겠거나, 아직 만들지 않았다면 아래 가이드를 참고해 주세요.</span>
