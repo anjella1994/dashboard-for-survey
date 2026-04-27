@@ -185,7 +185,7 @@ background: White;
 - drag-over: `border-color: Black`, `background: neutral-50`
 - hint 텍스트: Body-3 (Medium), `neutral-600`
 - formats `[ .csv · .xlsx ]`: Caption-1, `neutral-600`
-- **pick-btn**: `background: Black`, `color: White`, `border-radius: 999px`, `padding: 9px 16px`, Button-1
+- **pick-btn**:  button-1의 Variant 중 Black
 
 #### State B — Done (업로드 완료)
 
@@ -199,7 +199,7 @@ padding: 18px 14px 16px;
 - **check-icon**: `width: 28px`, `height: 28px`, `border-radius: 50%`, `background: Black`
   - 아이콘: SVG checkmark (현재 inline SVG 사용, `assets/icons/`에 없음)
 - 파일명: Body-3 (Medium), `neutral-600`
-- **reselect-btn** (다시 선택하기): `border: 1px solid neutral-200`, `border-radius: 999px`, `padding: 6px 12px`, Button-2, hover 시 `border-color: Black`
+- **reselect-btn** (다시 선택하기): button-1의 Variant 중 Default
   - 아이콘: SVG rotate (현재 inline SVG 사용)
 
 #### State C — Error
@@ -257,9 +257,9 @@ display: flex;
 flex-direction: column;
 ```
 
-- **헤더**: `"저장된 대시보드 리스트"` — Heading-4 (Bold), `neutral-900`
+- **헤더**: `"저장된 대시보드 리스트"` — Heading-5 (Semibold), `neutral-900`
 - **헤더 하단 구분선**: `neutral-200`
-- **닫기 버튼 (×)**: `28×28`, 원형, `neutral-600`, hover bg `neutral-50`
+- **닫기 버튼 (×)**: `26×26`, 원형, `neutral-600`, hover bg `neutral-50`
 - **항목**: `item_saved` 컴포넌트 반복
 - **empty state**: `neutral-600`, Body-3
 - body 영역: 스크롤 가능
