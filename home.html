@@ -270,16 +270,16 @@
   .pick-btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 9px 16px;
-    background: var(--Black);
+    gap: 4px;
+    padding: 7px 14px;
+    background: var(--neutral-900);
     color: var(--White);
-    border-radius: var(--radius-pill);
+    border-radius: 8px;
     font-size: var(--button-1-size);
     line-height: var(--body-line-height);
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-semibold);
   }
-  .pick-btn:hover { background: var(--neutral-900); }
+  .pick-btn:hover { background: var(--Black); }
   .pick-btn svg { width: 14px; height: 14px; }
 
   .drop-zone.done {
@@ -304,7 +304,7 @@
     font-size: var(--heading-5-size);
     line-height: var(--heading-line-height);
     font-weight: var(--font-weight-semibold);
-    color: var(--Black);
+    color: var(--neutral-900);
   }
   .check-icon {
     font-family: 'Material Symbols Rounded';
@@ -324,21 +324,21 @@
   }
   .reselect-btn {
     margin-top: 4px;
-    padding: 6px 12px;
-    font-size: var(--button-2-size);
+    padding: 7px 14px;
+    font-size: var(--button-1-size);
     line-height: var(--body-line-height);
-    font-weight: var(--font-weight-medium);
-    color: var(--neutral-800);
-    border: 1px solid var(--neutral-200);
-    border-radius: var(--radius-pill);
+    font-weight: var(--font-weight-regular);
+    color: var(--neutral-900);
+    border: 1px solid var(--neutral-300);
+    border-radius: 8px;
     background: var(--White);
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     transition: border-color .15s, color .15s;
   }
-  .reselect-btn:hover { border-color: var(--Black); color: var(--Black); }
-  .reselect-btn svg { width: 11px; height: 11px; }
+  .reselect-btn:hover { border-color: var(--neutral-900); color: var(--neutral-900); }
+  .reselect-btn svg { width: 14px; height: 14px; }
 
   .drop-zone.has-error {
     border-color: var(--low-4);
@@ -455,19 +455,19 @@
     border-bottom: 1px solid var(--neutral-200);
   }
   .modal-title {
-    font-size: var(--heading-4-size);
+    font-size: var(--heading-5-size);
     line-height: var(--heading-line-height);
     font-weight: var(--font-weight-semibold);
-    color: var(--Black);
+    color: var(--neutral-900);
   }
   .modal-close {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    color: var(--neutral-800);
+    color: var(--neutral-600);
   }
   .modal-close:hover { background: var(--neutral-50); color: var(--Black); }
   .modal-body {
