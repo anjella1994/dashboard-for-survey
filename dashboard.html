@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>설문조사 분석 대시보드 | purple6studio</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="dashboard.css">
+<link rel="stylesheet" href="dashboard-for-survey.css">
 </head>
 <body class="dashboard-page">
 
@@ -29,12 +28,12 @@
       <button class="header-btn primary" type="button" id="dashboard-save-btn">현재 대시보드 저장하기</button>
       <div class="header-divider" aria-hidden="true"></div>
       <button id="dashboard-list-btn" class="list-btn" type="button">
-            <img class="icon" src="assets/icons/list_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.png" alt="">
+            <img class="icon" src="assets/icons/menu_40dp_151515_FILL0_wght400_GRAD0_opsz40.svg" alt="">
         저장된 대시보드 리스트
         <span class="count" id="saved-count">0</span>
       </button>
       <button class="create-btn" type="button" id="new-analysis-btn">
-            <img class="icon" src="assets/icons/new_window_24dp_1F1F1F_FILL0_wght400_GRAD0_opsz24.png" alt="">
+            <img class="icon" src="assets/icons/new_window_40dp_151515_FILL0_wght400_GRAD0_opsz40.svg" alt="">
         새 대시보드 만들기
       </button>
     </div>
@@ -146,7 +145,7 @@
       </button>
     </div>
     <div class="modal-body">
-      <div class="update-note">업로드된 CSV/XLSX 파일을 파일별로 교체할 수 있어요. 파일을 모두 고른 뒤 아래의 분석하기 버튼을 누르면 세 파일을 함께 검증한 다음 반영합니다.</div>
+      <div class="update-note">업로드된 CSV 파일을 파일별로 교체할 수 있어요. 파일을 모두 고른 뒤 아래의 분석하기 버튼을 누르면 세 파일을 함께 검증한 다음 반영합니다.</div>
       <div id="data-update-list"></div>
     </div>
     <div class="modal-footer">
@@ -154,7 +153,7 @@
     </div>
   </div>
 </div>
-<input type="file" id="data-update-file-input" accept=".csv,.xlsx" hidden>
+<input type="file" id="data-update-file-input" accept=".csv" hidden>
 
 <div class="modal-backdrop" id="other-response-modal" role="dialog" aria-modal="true" aria-labelledby="other-response-modal-title">
   <div class="modal">

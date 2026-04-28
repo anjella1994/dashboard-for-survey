@@ -198,22 +198,6 @@ function readAsText(file) {
   });
 }
 
-function readAsArrayBuffer(file) {
-  return new Promise((resolve, reject) => {
-    const r = new FileReader();
-    r.onload = () => resolve(r.result);
-    r.onerror = () => reject(r.error);
-    r.readAsArrayBuffer(file);
-  });
-}
-
-function arrayBufferToBase64(buf) {
-  let bin = '';
-  const bytes = new Uint8Array(buf);
-  for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
-  return btoa(bin);
-}
-
 // 코드북/응답 데이터 파일을 읽고 파싱하기 위한 공통 유틸리티입니다.
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({
@@ -223,13 +207,6 @@ function escapeHtml(s) {
     '"': '&quot;',
     "'": '&#39;'
   }[c]));
-}
-
-function base64ToArrayBuffer(b64) {
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes.buffer;
 }
 
 function parseCSV(text) {
@@ -268,18 +245,6 @@ async function readTabularFile(file, maxRows = null) {
       rows: maxRows ? rows.slice(0, maxRows) : rows,
       contentType: 'csv-text',
       content: text
-    };
-  }
-  if (ext === 'xlsx') {
-    const buf = await readAsArrayBuffer(file);
-    const wb = XLSX.read(buf, { type: 'array' });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, raw: true })
-      .map(r => (r || []).map(v => v == null ? '' : String(v)));
-    return {
-      rows: maxRows ? rows.slice(0, maxRows) : rows,
-      contentType: 'xlsx-base64',
-      content: arrayBufferToBase64(buf)
     };
   }
   throw new Error('unsupported');
@@ -479,13 +444,6 @@ async function loadCodebookRows(fileRec) {
   if (!payload) return null;
   if (payload.contentType === 'csv-text') {
     return parseCSV(payload.content);
-  }
-  if (payload.contentType === 'xlsx-base64') {
-    const buf = base64ToArrayBuffer(payload.content);
-    const wb = XLSX.read(buf, { type: 'array' });
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, blankrows: false, raw: true });
-    return rows.map(r => (r || []).map(v => v == null ? '' : String(v)));
   }
   return null;
 }
@@ -1652,14 +1610,6 @@ function setupSavedModal() {
         content: await readAsText(file)
       };
     }
-    if (ext === 'xlsx') {
-      return {
-        name: file.name,
-        size: file.size,
-        contentType: 'xlsx-base64',
-        content: arrayBufferToBase64(await readAsArrayBuffer(file))
-      };
-    }
     throw new Error('unsupported');
   }
 
@@ -1674,8 +1624,8 @@ function setupSavedModal() {
     if (idx < 0) return;
 
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!['csv', 'xlsx'].includes(ext)) {
-      throw new Error('지원하지 않는 파일 형식입니다. .csv 또는 .xlsx 파일만 업로드할 수 있습니다.');
+    if (ext !== 'csv') {
+      throw new Error('지원하지 않는 파일 형식입니다. .csv 파일만 업로드할 수 있습니다.');
     }
     const parsedUpload = await readTabularFile(file);
     const fileResult = validateFileForKey(key, parsedUpload.rows);
@@ -1765,8 +1715,8 @@ function setupSavedModal() {
   async function handleDataFileReplace(file, key) {
     if (!file || !key) return;
     const ext = (file.name.split('.').pop() || '').toLowerCase();
-    if (!['csv', 'xlsx'].includes(ext)) {
-      throw new Error('지원하지 않는 파일 형식입니다. .csv 또는 .xlsx 파일만 업로드할 수 있습니다.');
+    if (ext !== 'csv') {
+      throw new Error('지원하지 않는 파일 형식입니다. .csv 파일만 업로드할 수 있습니다.');
     }
     const parsedUpload = await readTabularFile(file);
     const fileResult = validateFileForKey(key, parsedUpload.rows);
@@ -1919,6 +1869,10 @@ function setupSavedModal() {
 const GROUP_PALETTE = [
   '#5b7a9a', '#c67b7b', '#7ba87a', '#c6a77b',
   '#a77bc6', '#7bbfb8', '#c67bad', '#9ba07b'
+];
+const ALLOCATION_PALETTE = [
+  '#5b7a9a', '#7ba87a', '#c6a77b', '#c67b7b',
+  '#7bbfb8', '#9a8ac5', '#8f9874', '#b98a9f'
 ];
 const SINGLE_BAR_COLOR = '#4a4a4a';
 const COMPARE_BAR_COLOR = '#d9d9d9';
@@ -2109,6 +2063,10 @@ function isNumericOpenType(type) {
   return cleanCell(type).includes('주관식 숫자');
 }
 
+function isRatioAllocationType(type) {
+  return cleanCell(type).includes('주관식 비율 배분');
+}
+
 function isTextOpenType(type) {
   return cleanCell(type).includes('주관식 문자');
 }
@@ -2118,7 +2076,8 @@ function supportsResultType(type) {
     || isMultiChoiceType(type)
     || isRankChoiceType(type)
     || isScaleChoiceType(type)
-    || isNumericOpenType(type);
+    || isNumericOpenType(type)
+    || isRatioAllocationType(type);
 }
 
 function getCriterionEntry(criterionLabel) {
@@ -2415,6 +2374,192 @@ function aggregateMulti(targetLabel, criterionLabel, rows) {
   };
 }
 
+function parseFiniteDisplayNumber(value) {
+  const raw = cleanCell(value).replace(/,/g, '');
+  if (!raw) return null;
+  const num = Number(raw);
+  return Number.isFinite(num) ? num : null;
+}
+
+function getRatioAllocationDataSource() {
+  const hasValueRows = Array.isArray(filterState.valueRows) && filterState.valueRows.length >= 2;
+  return {
+    rows: hasValueRows ? filterState.valueRows : filterState.rows,
+    headerMap: hasValueRows ? filterState.valueHeaderMap : filterState.headerMap
+  };
+}
+
+function getExpandedRatioAllocationItems(targetLabel, entry, headerMap) {
+  if (!entry || !isRatioAllocationType(entry.type)) return [];
+  const sourceHeaderMap = headerMap || new Map();
+  const items = [];
+  const usedLabels = new Set();
+
+  (entry.options || []).forEach(option => {
+    const expandedLabel = `${targetLabel}__${option}`;
+    if (!sourceHeaderMap.has(expandedLabel)) return;
+    items.push({ option, label: expandedLabel, colIdx: sourceHeaderMap.get(expandedLabel) });
+    usedLabels.add(expandedLabel);
+  });
+
+  resultState.codebookByLabel.forEach((candidate, label) => {
+    if (!candidate || cleanCell(candidate.role).toLowerCase() !== 'expanded') return;
+    if (!isRatioAllocationType(candidate.type)) return;
+    if (!label.startsWith(`${targetLabel}__`)) return;
+    if (!sourceHeaderMap.has(label) || usedLabels.has(label)) return;
+
+    const option = cleanCell(label.slice(targetLabel.length + 2));
+    if (!option) return;
+    items.push({ option, label, colIdx: sourceHeaderMap.get(label) });
+    usedLabels.add(label);
+  });
+
+  return items;
+}
+
+function getRatioAllocationValuesFromRaw(row, rawIdx, optionOrder) {
+  if (rawIdx === undefined || !Array.isArray(optionOrder) || optionOrder.length === 0) return null;
+  const raw = cleanCell((row || [])[rawIdx]);
+  if (!raw) return null;
+  const parts = raw.split('|').map(parseFiniteDisplayNumber);
+  if (parts.length < optionOrder.length) return null;
+  const values = optionOrder.map((option, index) => ({
+    option,
+    value: parts[index]
+  }));
+  return values.every(item => Number.isFinite(item.value)) ? values : null;
+}
+
+function getRatioAllocationValues(row, rawIdx, expandedItems, optionOrder) {
+  const safeOptionOrder = Array.isArray(optionOrder) ? optionOrder : [];
+  const byOption = new Map();
+  let expandedComplete = expandedItems.length > 0;
+
+  expandedItems.forEach(item => {
+    const value = item.colIdx === undefined ? null : parseFiniteDisplayNumber((row || [])[item.colIdx]);
+    if (!Number.isFinite(value)) expandedComplete = false;
+    byOption.set(item.option, value);
+  });
+
+  if (expandedComplete && safeOptionOrder.every(option => byOption.has(option))) {
+    return safeOptionOrder.map(option => ({ option, value: byOption.get(option) }));
+  }
+
+  return getRatioAllocationValuesFromRaw(row, rawIdx, safeOptionOrder);
+}
+
+function isValidRatioAllocationValues(values) {
+  if (!Array.isArray(values) || values.length === 0) return false;
+  if (!values.every(item => Number.isFinite(item.value) && item.value >= 0)) return false;
+  const sum = values.reduce((total, item) => total + item.value, 0);
+  return sum >= 99.99 && sum <= 100.01;
+}
+
+function summarizeRatioAllocationRecords(records, optionOrder) {
+  const n = Array.isArray(records) ? records.length : 0;
+  const sums = Object.fromEntries((optionOrder || []).map(option => [option, 0]));
+  (records || []).forEach(values => {
+    values.forEach(item => {
+      if (!Object.prototype.hasOwnProperty.call(sums, item.option)) sums[item.option] = 0;
+      sums[item.option] += item.value;
+    });
+  });
+  return (optionOrder || []).map(option => {
+    const mean = n > 0 ? (sums[option] || 0) / n : 0;
+    return {
+      option,
+      pct: mean,
+      count: n
+    };
+  });
+}
+
+function aggregateRatioAllocation(targetLabel, criterionLabel, rowIndexes = []) {
+  const entry = resultState.codebookByLabel.get(targetLabel);
+  if (!entry) return null;
+
+  const effectiveIndexes = Array.isArray(rowIndexes) && rowIndexes.length > 0
+    ? rowIndexes
+    : getFilteredRowIndexes();
+  if (effectiveIndexes.length === 0) return null;
+
+  const source = getRatioAllocationDataSource();
+  const sourceRows = source.rows || [];
+  const sourceHeaderMap = source.headerMap || new Map();
+  const rawIdx = sourceHeaderMap.get(targetLabel);
+  const expandedItems = getExpandedRatioAllocationItems(targetLabel, entry, sourceHeaderMap);
+  const optionOrder = (entry.options && entry.options.length > 0)
+    ? [...entry.options]
+    : expandedItems.map(item => item.option);
+  if (optionOrder.length === 0) return null;
+
+  const activeValueRows = getRowsByIndexes(sourceRows, effectiveIndexes);
+  const activeLabelRows = getRowsByIndexes(filterState.rows || [], effectiveIndexes);
+  const parsedRows = [];
+  let invalidN = 0;
+
+  activeValueRows.forEach((valueRow, index) => {
+    const values = getRatioAllocationValues(valueRow, rawIdx, expandedItems, optionOrder);
+    if (!isValidRatioAllocationValues(values)) {
+      invalidN += 1;
+      return;
+    }
+    parsedRows.push({
+      values,
+      labelRow: activeLabelRows[index] || []
+    });
+  });
+
+  if (parsedRows.length === 0) return null;
+
+  const totalResults = summarizeRatioAllocationRecords(parsedRows.map(row => row.values), optionOrder);
+
+  let groupResults = null;
+  if (criterionLabel) {
+    const critEntry = getCriterionEntry(criterionLabel);
+    const cIdx = filterState.headerMap.get(criterionLabel);
+    if (critEntry && cIdx !== undefined) {
+      const groupOrder = [...critEntry.options];
+      const groupSet = new Set(groupOrder);
+      const byGroup = new Map();
+      groupOrder.forEach(groupValue => byGroup.set(groupValue, []));
+
+      parsedRows.forEach(parsed => {
+        const groupValue = cleanCell((parsed.labelRow || [])[cIdx]);
+        if (!groupValue) return;
+        if (!groupSet.has(groupValue)) {
+          groupSet.add(groupValue);
+          groupOrder.push(groupValue);
+          byGroup.set(groupValue, []);
+        }
+        byGroup.get(groupValue).push(parsed.values);
+      });
+
+      groupResults = groupOrder.map(groupValue => {
+        const records = byGroup.get(groupValue) || [];
+        return {
+          value: groupValue,
+          label: `${critEntry.label}: ${groupValue}`,
+          n: records.length,
+          results: summarizeRatioAllocationRecords(records, optionOrder)
+        };
+      });
+    }
+  }
+
+  return {
+    targetLabel,
+    codebookEntry: entry,
+    totalN: parsedRows.length,
+    invalidN,
+    optionOrder,
+    totalResults,
+    visualType: 'ratio-allocation',
+    criterionLabel: groupResults ? criterionLabel : null,
+    groupResults
+  };
+}
+
 function aggregateResultQuestion(targetLabel, criterionLabel, rows, valueRows = [], rowIndexes = []) {
   const entry = resultState.codebookByLabel.get(targetLabel);
   if (!entry) return null;
@@ -2423,6 +2568,7 @@ function aggregateResultQuestion(targetLabel, criterionLabel, rows, valueRows = 
   if (isRankChoiceType(entry.type)) return aggregateRank(targetLabel, criterionLabel, rows);
   if (isScaleChoiceType(entry.type)) return aggregateScale(targetLabel, criterionLabel, rows);
   if (isNumericOpenType(entry.type)) return aggregateNumericOpen(targetLabel, criterionLabel, rowIndexes);
+  if (isRatioAllocationType(entry.type)) return aggregateRatioAllocation(targetLabel, criterionLabel, rowIndexes);
   return null;
 }
 
@@ -3432,6 +3578,195 @@ function buildChoiceDataTableHtml(data) {
     </table>
   `;
   return wrapResultTable(tableHtml);
+}
+
+function allocationColor(index) {
+  return ALLOCATION_PALETTE[Math.max(0, Number(index) || 0) % ALLOCATION_PALETTE.length];
+}
+
+function buildRatioAllocationStackHtml(results, options = {}) {
+  const { groupLabel = '', n = 0 } = options;
+  const safeResults = Array.isArray(results) ? results : [];
+  const segmentsHtml = safeResults.map((result, index) => {
+    const width = Math.max(0, Math.min(100, Number(result.pct) || 0));
+    const tip = encodeURIComponent(JSON.stringify({
+      kind: 'ratio-allocation',
+      groupLabel,
+      option: result.option,
+      pct: result.pct,
+      count: n || result.count || 0
+    }));
+    return `
+      <div class="allocation-segment ${width < 10 ? 'is-narrow' : ''}"
+           style="width:${width}%; background:${allocationColor(index)};"
+           data-tip="${tip}">
+        <span class="allocation-segment-value">${formatPercent(result.pct)}</span>
+      </div>
+    `;
+  }).join('');
+  const labelsHtml = safeResults.map((result, index) => {
+    const width = Math.max(0, Math.min(100, Number(result.pct) || 0));
+    const tip = encodeURIComponent(JSON.stringify({
+      kind: 'ratio-allocation',
+      groupLabel,
+      option: result.option,
+      pct: result.pct,
+      count: n || result.count || 0
+    }));
+    return `
+      <div class="allocation-item-label" style="width:${width}%;" data-tip="${tip}">
+        <span class="allocation-item-name">
+          <span class="allocation-item-swatch" style="background:${allocationColor(index)};"></span>
+          <span class="allocation-item-text">${escapeHtml(result.option)}</span>
+        </span>
+        <span class="allocation-item-value">${formatPercent(result.pct)}</span>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="allocation-stack-wrap">
+      <div class="allocation-stack-track">${segmentsHtml}</div>
+      <div class="allocation-label-row">${labelsHtml}</div>
+    </div>
+  `;
+}
+
+function buildRatioAllocationChartHtml(data, hiddenGroups = new Set()) {
+  if (!data.groupResults) {
+    return `
+      <div class="allocation-chart">
+        ${buildRatioAllocationStackHtml(data.totalResults, { groupLabel: '응답자 전체', n: data.totalN })}
+      </div>
+    `;
+  }
+
+  const displayGroups = getDisplayGroupResults(data.groupResults, hiddenGroups);
+  if (displayGroups.length === 0) return '<div class="result-empty">표시할 그룹이 없습니다.</div>';
+  const rowsHtml = displayGroups.map(group => {
+    const color = getGroupColor(data.groupResults, group.value);
+    return `
+      <div class="allocation-group-row">
+        <div class="allocation-group-label" style="--group-color:${color};">
+          <strong>${escapeHtml(group.label)}</strong>
+          <span>N=${Number(group.n || 0).toLocaleString()}</span>
+        </div>
+        <div class="allocation-group-stack">
+          ${buildRatioAllocationStackHtml(group.results, { groupLabel: group.label, n: group.n })}
+        </div>
+      </div>
+    `;
+  }).join('');
+  return `<div class="allocation-group-chart">${rowsHtml}</div>`;
+}
+
+function buildRatioAllocationDataTableHtml(data, hiddenGroups = new Set()) {
+  if (!data.groupResults) {
+    const sumPct = data.totalResults.reduce((sum, result) => sum + (result.pct || 0), 0);
+    const tableHtml = `
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th>배분 항목</th>
+            <th class="num">평균 비중(%)</th>
+            <th class="num">응답 수(명)</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.totalResults.map(result => `
+            <tr>
+              <td>${escapeHtml(result.option)}</td>
+              <td class="num mean-value">${formatPercent(result.pct)}</td>
+              <td class="num">${Number(result.count || 0).toLocaleString()}</td>
+            </tr>
+          `).join('')}
+          <tr class="total-row">
+            <td>합계</td>
+            <td class="num">${formatPercent(sumPct)}</td>
+            <td class="num">${Number(data.totalN || 0).toLocaleString()}</td>
+          </tr>
+        </tbody>
+      </table>
+    `;
+    return wrapResultTable(tableHtml);
+  }
+
+  const displayGroups = getDisplayGroupResults(data.groupResults, hiddenGroups);
+  const topRow = [
+    `<th rowspan="2">배분 항목</th>`,
+    buildGroupedCountHeader('응답자 전체', data.totalN, 2),
+    ...displayGroups.map(group => buildGroupedCountHeader(group.label, group.n, 2))
+  ].join('');
+  const subRow = [
+    `<th class="num group-col">평균 비중(%)</th><th class="num">응답 수(명)</th>`,
+    ...displayGroups.map(() => `<th class="num group-col">평균 비중(%)</th><th class="num">응답 수(명)</th>`)
+  ].join('');
+  const bodyRows = data.totalResults.map(result => {
+    const groupCells = displayGroups.map(group => {
+      const groupResult = group.results.find(item => item.option === result.option) || { pct: 0, count: 0 };
+      return `<td class="num group-col mean-value">${formatPercent(groupResult.pct)}</td><td class="num">${Number(group.n || groupResult.count || 0).toLocaleString()}</td>`;
+    }).join('');
+    return `
+      <tr>
+        <td>${escapeHtml(result.option)}</td>
+        <td class="num group-col mean-value">${formatPercent(result.pct)}</td>
+        <td class="num">${Number(result.count || 0).toLocaleString()}</td>
+        ${groupCells}
+      </tr>
+    `;
+  }).join('');
+  const totalGroupCells = displayGroups.map(group => {
+    const totalPct = (group.results || []).reduce((sum, result) => sum + (result.pct || 0), 0);
+    return `<td class="num group-col">${formatPercent(totalPct)}</td><td class="num">${Number(group.n || 0).toLocaleString()}</td>`;
+  }).join('');
+  const tableHtml = `
+    <table class="result-table">
+      <thead>
+        <tr>${topRow}</tr>
+        <tr>${subRow}</tr>
+      </thead>
+      <tbody>
+        ${bodyRows}
+        <tr class="total-row">
+          <td>합계</td>
+          <td class="num group-col">${formatPercent(data.totalResults.reduce((sum, result) => sum + (result.pct || 0), 0))}</td>
+          <td class="num">${Number(data.totalN || 0).toLocaleString()}</td>
+          ${totalGroupCells}
+        </tr>
+      </tbody>
+    </table>
+  `;
+  return wrapResultTable(tableHtml);
+}
+
+function buildRatioAllocationSection(data) {
+  if (!data) return '';
+  const { codebookEntry, targetLabel, groupResults } = data;
+  const hiddenGroups = resultState.hiddenGroupKeys.get(targetLabel) || new Set();
+  const chartHtml = buildRatioAllocationChartHtml(data, hiddenGroups);
+  const legendHtml = groupResults ? buildLegendHtml(data, hiddenGroups) : '';
+  const tableHtml = buildRatioAllocationDataTableHtml(data, hiddenGroups);
+  const fullText = buildQuestionFullHtml(codebookEntry);
+  const visualClass = getResultVisualClass(!!legendHtml);
+  const invalidNote = data.invalidN > 0
+    ? ` 합계가 100이 아니거나 비어 있는 응답 ${Number(data.invalidN).toLocaleString()}건은 제외했습니다.`
+    : '';
+  const noteHtml = `<div class="result-table-note">주관식 비율 배분 문항으로, 각 응답자의 항목별 합계가 100인 값을 평균 비중으로 표시합니다.${invalidNote}</div>`;
+
+  return `
+    <section class="result-section" data-target="${escapeHtml(targetLabel)}" data-type="ratio-allocation">
+      <div class="result-header">
+        <div class="result-title">${escapeHtml(targetLabel)}</div>
+        ${fullText}
+      </div>
+      <div class="${visualClass}">
+        <div class="result-chart-col">${chartHtml}</div>
+        ${legendHtml}
+      </div>
+      ${tableHtml}
+      ${noteHtml}
+    </section>
+  `;
 }
 
 function getScaleViewMode(targetLabel) {
@@ -4807,6 +5142,7 @@ function buildDataTableHtml(data, hiddenGroups = new Set()) {
   if (data.visualType === 'rank') return buildRankDataTableHtml(data, hiddenGroups);
   if (data.visualType === 'scale') return buildScaleDataTableHtml(data, hiddenGroups);
   if (data.visualType === 'numeric-open') return buildNumericOpenDataTableHtml(data, hiddenGroups);
+  if (data.visualType === 'ratio-allocation') return buildRatioAllocationDataTableHtml(data, hiddenGroups);
   return buildChoiceDataTableHtml(data);
 }
 
@@ -5697,12 +6033,14 @@ function buildResultSection(data, rows) {
   if (data.visualType === 'rank') return buildRankSection(data, rows);
   if (data.visualType === 'scale') return buildScaleSection(data, rows);
   if (data.visualType === 'numeric-open') return buildNumericOpenSection(data, rows);
+  if (data.visualType === 'ratio-allocation') return buildRatioAllocationSection(data);
   return buildChoiceSectionHtml(data, rows);
 }
 
 function buildUnsupportedSection(label, entry) {
   const fullText = buildQuestionFullHtml(entry);
   const typeText = entry ? entry.type : '알 수 없음';
+  const messageHtml = `이 문항 유형(<strong>${escapeHtml(typeText)}</strong>)의 시각화는 아직 준비 중이에요.`;
   return `
     <section class="result-section" data-target="${escapeHtml(label)}">
       <div class="result-header">
@@ -5710,7 +6048,7 @@ function buildUnsupportedSection(label, entry) {
         ${fullText}
       </div>
       <div class="result-unsupported">
-        이 문항 유형(<strong>${escapeHtml(typeText)}</strong>)의 시각화는 아직 준비 중이에요. 현재는 <strong>객관식 단일</strong>, <strong>객관식 중복</strong>, <strong>객관식 순위</strong>, <strong>객관식 척도</strong>, <strong>주관식 숫자</strong> 문항을 지원합니다.
+        ${messageHtml} 현재는 <strong>객관식 단일</strong>, <strong>객관식 중복</strong>, <strong>객관식 순위</strong>, <strong>객관식 척도</strong>, <strong>주관식 숫자</strong>, <strong>주관식 비율 배분</strong> 문항을 지원합니다.
       </div>
     </section>
   `;
@@ -6155,6 +6493,13 @@ function formatTooltipHtml(d) {
         line(`Q2(중앙값) ${formatNumericValueWithUnit(Number(d.median), d.unit || "")}`),
         line(`Q3(상위 25%) ${formatNumericValueWithUnit(Number(d.q3), d.unit || "")}`),
         line(n(d.totalN))
+      ].join("");
+    case "ratio-allocation":
+      return [
+        d.groupLabel ? line(escapeHtml(d.groupLabel)) : "",
+        line(escapeHtml(d.option || "")),
+        line(`평균 비중 ${pct(d.pct)}`),
+        line(n(d.count))
       ].join("");
     case "scale-compare-group-dot":
       return [

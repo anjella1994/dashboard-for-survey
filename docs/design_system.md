@@ -1,6 +1,7 @@
 # Design System
 
 > 폰트: Pretendard / 모든 색상은 아래 Figma Variables만 사용. 임의 hex 값 사용 금지.
+> 이 문서는 공통 토큰과 재사용 컴포넌트만 정의한다. 화면별 레이아웃, 간격, 상태별 세부 CSS는 각 화면 구현 파일과 화면 스펙 문서에서 관리한다.
 
 ---
 
@@ -99,6 +100,74 @@ font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto San
 
 ---
 
+## Common Components
+
+### Logo
+
+| 항목 | 기준 |
+|------|------|
+| 자산 | `assets/purple6studio_한줄_black.png` |
+| 사용 위치 | 홈 상단, 대시보드 헤더 |
+| 표시 규칙 | 로고 이미지는 왜곡 없이 표시하고, 링크 또는 브랜드 영역 자체의 텍스트 장식은 제거한다. |
+
+### Button-1
+
+주요 화면 액션과 헤더 유틸리티에 쓰는 기본 버튼이다. 아이콘을 함께 쓸 수 있고, 필요하면 숫자 태그를 오른쪽에 붙인다.
+
+| Variant | 용도 | 배경 | 텍스트 | 보더 | 굵기 |
+|---------|------|------|--------|------|------|
+| Default | 보조 액션, 리스트 버튼 | `White` | `neutral-900` | `neutral-300` | Medium |
+| Focus | 선택 또는 강조된 보조 액션 | `White` | `neutral-900` | `neutral-900` | Semibold |
+| Black | 주요 소형 액션 | `neutral-900` | `White` | 없음 | Semibold |
+| Gray | 약한 배경 강조 액션 | `neutral-100` | `neutral-900` | `neutral-300` | Medium |
+
+- 타입 토큰: `Button-1` / `Button-1-strong`
+- 아이콘이 있을 때는 텍스트 앞에 둔다.
+- 호버는 variant의 의미를 유지하면서 보더 또는 배경 대비만 높인다.
+
+### Button-2
+
+목록, 모달, 반복 항목 안의 작은 액션 버튼이다.
+
+| Variant | 용도 | 배경 | 텍스트 | 보더 |
+|---------|------|------|--------|------|
+| Default | 이름 바꾸기, 교체하기 같은 일반 액션 | `White` | `neutral-600` | `neutral-200` |
+| Hover | 일반 액션 hover | `White` | `Black` | `Black` |
+| Delete Hover | 삭제 액션 hover | `White` | `low-4` | `low-4` |
+| Active | 확정 또는 선택 상태 | `Black` | `White` | 없음 |
+
+- 타입 토큰: `Button-2` / `Button-2-strong`
+- 삭제처럼 위험도가 있는 액션은 hover에서만 error 계열을 사용한다.
+
+### Checkbox
+
+필터, 범례, 표시/숨김 설정처럼 다중 선택 또는 토글성 선택에 사용한다.
+
+| 상태 | 기준 |
+|------|------|
+| Default | 네이티브 checkbox 사용 |
+| Checked | `Black` 또는 해당 화면의 주 텍스트 색을 accent color로 사용 |
+| Disabled/비활성 | 텍스트와 보조 마커를 흐리게 표시 |
+
+- 체크박스 자체보다 라벨 전체를 클릭 영역으로 사용하는 것을 기본으로 한다.
+- 범례와 연결된 체크박스는 색상 swatch와 함께 표시한다.
+
+### Number Tag
+
+개수, 선택 수, 필터 선택 수처럼 짧은 숫자를 보여주는 pill 태그다.
+
+| 항목 | 기준 |
+|------|------|
+| 배경 | `Black` 또는 `neutral-900` |
+| 텍스트 | `White`, `Label-2-strong` |
+| 형태 | pill radius, 최소 너비를 보장 |
+| 사용 예 | 저장된 대시보드 개수, 필터 선택 개수 |
+
+- 숫자만 단독으로 보여주고, 단위가 필요하면 태그 바깥의 라벨에서 설명한다.
+- 값이 0이어도 맥락상 필요한 경우에는 표시한다.
+
+---
+
 ## Color
 
 > Figma Variables 기준. 이 목록에 없는 색상 사용 금지.
@@ -124,9 +193,11 @@ font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto San
 
 | 변수명 | 값 | 용도 |
 |--------|----|------|
-| `low-4` | `#CF9D9D` | 에러 보더, 에러 텍스트 |
+| `error-bg` | `#FFEBEE` | 오류 상태 카드 배경 |
+| `error-text` | `#D32F2F` | 오류 메시지 텍스트 |
+| `low-4` | `#CF9D9D` | 에러 보더, 삭제 hover |
 | `low-3` | `#D4AEAE` | — |
-| `low-2` | `#DAC3C3` | 에러 배경 |
+| `low-2` | `#DAC3C3` | 보조 에러 배경 |
 
 ### Data Visualization (대시보드 전용)
 
@@ -165,6 +236,8 @@ font-family: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Noto San
   --neutral-50:  #f8f8f8;
 
   /* error */
+  --error-bg: #ffebee;
+  --error-text: #d32f2f;
   --low-4: #cf9d9d;
   --low-3: #d4aeae;
   --low-2: #dac3c3;
